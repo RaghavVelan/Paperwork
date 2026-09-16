@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-bg: #0c0c0d;
+  --color-surface: #151517;
+  --color-raised: #1c1c1f;
+  --color-fg: #f3f1ec;
+  --color-muted: #9a9892;
+  --color-subtle: #6e6c67;
+  --color-border: #2a2a2e;
+  --color-accent: #c9cdd4;
+  --color-accent-fg: #0c0c0d;
+  --color-income: #8fafa0;
+  --color-expense: #d08a7c;
+  --color-ring: #c9cdd4;
+
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2rem;
+
+  --shadow-card: 0 0 0 1px rgba(243, 241, 236, 0.07);
+  --shadow-float: 0 0 0 1px rgba(243, 241, 236, 0.1), 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+
+  --text-2xs: 0.625rem;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  input[type="date"] {
+    color-scheme: dark;
+  }
+
+  select {
+    color-scheme: dark;
+  }
+
+  .pb-safe {
+    padding-bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
