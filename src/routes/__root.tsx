@@ -2,6 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppShell } from "@/components/app-shell";
+import { THEME_BOOTSTRAP } from "@/lib/theme";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Paperwork";
@@ -19,7 +20,7 @@ export const Route = createRootRoute({
         name: "description",
         content: "A quiet personal ledger with a calendar. Track money in and out on this device.",
       },
-      { name: "theme-color", content: "#0c0c0d" },
+      { name: "theme-color", content: "#f3f1ec" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -38,6 +39,7 @@ export const Route = createRootRoute({
     <html lang="en" suppressHydrationWarning className="antialiased">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />

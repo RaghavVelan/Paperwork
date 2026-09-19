@@ -1,19 +1,55 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+:root {
+  color-scheme: dark;
+  --pw-bg: #0c0c0d;
+  --pw-surface: #151517;
+  --pw-raised: #1c1c1f;
+  --pw-fg: #f3f1ec;
+  --pw-muted: #9a9892;
+  --pw-subtle: #6e6c67;
+  --pw-border: #2a2a2e;
+  --pw-accent: #c9cdd4;
+  --pw-accent-fg: #0c0c0d;
+  --pw-income: #8fafa0;
+  --pw-expense: #d08a7c;
+  --pw-ring: #c9cdd4;
+  --pw-shadow-card: 0 0 0 1px rgba(243, 241, 236, 0.07);
+  --pw-shadow-float: 0 0 0 1px rgba(243, 241, 236, 0.1), 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --pw-bg: #f3f1ec;
+  --pw-surface: #fffcf7;
+  --pw-raised: #ece8e0;
+  --pw-fg: #161513;
+  --pw-muted: #6e6c67;
+  --pw-subtle: #8a8780;
+  --pw-border: #ddd8ce;
+  --pw-accent: #1c1b19;
+  --pw-accent-fg: #f3f1ec;
+  --pw-income: #3f6f5c;
+  --pw-expense: #b45a4c;
+  --pw-ring: #1c1b19;
+  --pw-shadow-card: 0 0 0 1px rgba(22, 21, 19, 0.08);
+  --pw-shadow-float: 0 0 0 1px rgba(22, 21, 19, 0.08), 0 18px 40px -24px rgba(22, 21, 19, 0.28);
+}
+
 @theme {
-  --color-bg: #0c0c0d;
-  --color-surface: #151517;
-  --color-raised: #1c1c1f;
-  --color-fg: #f3f1ec;
-  --color-muted: #9a9892;
-  --color-subtle: #6e6c67;
-  --color-border: #2a2a2e;
-  --color-accent: #c9cdd4;
-  --color-accent-fg: #0c0c0d;
-  --color-income: #8fafa0;
-  --color-expense: #d08a7c;
-  --color-ring: #c9cdd4;
+  --color-bg: var(--pw-bg);
+  --color-surface: var(--pw-surface);
+  --color-raised: var(--pw-raised);
+  --color-fg: var(--pw-fg);
+  --color-muted: var(--pw-muted);
+  --color-subtle: var(--pw-subtle);
+  --color-border: var(--pw-border);
+  --color-accent: var(--pw-accent);
+  --color-accent-fg: var(--pw-accent-fg);
+  --color-income: var(--pw-income);
+  --color-expense: var(--pw-expense);
+  --color-ring: var(--pw-ring);
 
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
@@ -25,8 +61,8 @@
   --radius-2xl: 1.75rem;
   --radius-3xl: 2rem;
 
-  --shadow-card: 0 0 0 1px rgba(243, 241, 236, 0.07);
-  --shadow-float: 0 0 0 1px rgba(243, 241, 236, 0.1), 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+  --shadow-card: var(--pw-shadow-card);
+  --shadow-float: var(--pw-shadow-float);
 
   --text-2xs: 0.625rem;
 }
@@ -37,7 +73,8 @@
     -moz-osx-font-smoothing: grayscale;
     background: var(--color-bg);
     color: var(--color-fg);
-    color-scheme: dark;
+    transition: background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   body {
@@ -46,6 +83,8 @@
     font-family: var(--font-sans);
     min-height: 100dvh;
     overflow-x: hidden;
+    transition: background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   h1, h2, h3 {
@@ -63,12 +102,9 @@
     touch-action: manipulation;
   }
 
-  input[type="date"] {
-    color-scheme: dark;
-  }
-
+  input[type="date"],
   select {
-    color-scheme: dark;
+    color-scheme: inherit;
   }
 
   .pb-safe {

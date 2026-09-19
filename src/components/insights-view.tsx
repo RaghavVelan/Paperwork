@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
+import { motion } from "motion/react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CategoryIcon } from "@/components/category-icon";
 import { categoryById } from "@/lib/finance/categories";
@@ -216,7 +217,12 @@ function CategoryBar({
           </span>
         </div>
         <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-raised">
-          <div className="h-full rounded-full bg-expense/80" style={{ width: `${width}%` }} />
+          <motion.div
+            className="h-full origin-left rounded-full bg-expense/80"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: width / 100 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          />
         </div>
       </div>
     </li>

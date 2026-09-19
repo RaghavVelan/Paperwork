@@ -1,6 +1,7 @@
 import { DEFAULT_PROFILE, type LedgerSnapshot, type Profile } from "./types";
 import { isCurrencyCode } from "./currencies";
 import type { Transaction } from "@/lib/finance/types";
+import { isThemeMode } from "@/lib/theme";
 
 /**
  * Persistence boundary.
@@ -52,6 +53,7 @@ function coerceProfile(raw: unknown): Profile {
       typeof p.monthlyBudget === "number" && Number.isFinite(p.monthlyBudget)
         ? Math.max(0, p.monthlyBudget)
         : DEFAULT_PROFILE.monthlyBudget,
+    theme: isThemeMode(p.theme) ? p.theme : DEFAULT_PROFILE.theme,
   };
 }
 

@@ -1,4 +1,5 @@
 import type { Transaction } from "@/lib/finance/types";
+import type { ThemeMode } from "@/lib/theme";
 
 export type CurrencyCode =
   | "INR"
@@ -17,6 +18,7 @@ export type Profile = {
   currency: CurrencyCode;
   timezone: string;
   monthlyBudget: number;
+  theme: ThemeMode;
 };
 
 /** The unit we persist today and will sync after login. */
@@ -32,4 +34,5 @@ export const DEFAULT_PROFILE: Profile = {
   currency: "INR",
   timezone: "Asia/Kolkata",
   monthlyBudget: 40000,
+  theme: "system",
 };
