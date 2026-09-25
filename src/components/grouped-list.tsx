@@ -1,9 +1,10 @@
+import { AnimatePresence, motion } from "motion/react";
 import { format } from "date-fns";
-import { motion } from "motion/react";
 import type { Transaction } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { parseISODate } from "@/lib/money";
 import { addDaysISO } from "@/lib/time";
+import { transition } from "@/lib/motion";
 import { TransactionRow } from "./transaction-row";
 
 function headingFor(iso: string, todayIso: string): string {
@@ -29,26 +30,27 @@ export function GroupedList({
 
   return (
     <div className="flex flex-col gap-5">
-      {groups.map((g, i) => (
-        <motion.section
-          key={g.date}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.28,
-            delay: Math.min(i, 5) * 0.04,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-        >
+      {groups.map((g) => (
+        <section key={g.date}>
           <h3 className="mb-1 px-2 text-2xs font-medium uppercase tracking-[0.14em] text-subtle">
             {headingFor(g.date, todayIso)}
           </h3>
           <div className="flex flex-col">
-            {g.rows.map((tx) => (
-              <TransactionRow key={tx.id} tx={tx} onOpen={onOpen} />
-            ))}
+            <AnimatePresence initial={false}>
+              {g.rows.map((tx) => (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={transition.page}
+                >
+                  <TransactionRow tx={tx} onOpen={onOpen} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        </motion.section>
+        </section>
       ))}
     </div>
   );

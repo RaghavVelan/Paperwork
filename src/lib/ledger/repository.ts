@@ -13,11 +13,20 @@ import { isThemeMode } from "@/lib/theme";
  */
 export type LedgerRepository = {
   load(): Promise<LedgerSnapshot | null>;
+  loadSync(): LedgerSnapshot | null;
   save(snapshot: LedgerSnapshot): Promise<void>;
 };
 
-const KEY = "paperwork.ledger.v1";
-const LEGACY_KEYS = ["rupiya-v1"];
+export const LEDGER_KEY = "paperwork.ledger.v5";
+
+const LEGACY_KEYS = [
+  "paperwork.ledger.v4",
+  "paperwork.ledger.v3",
+  "paperwork.ledger.v2",
+  "paperwork.ledger.v1",
+  "rupiya-v1",
+  "meedi-v1",
+];
 
 const noop = {
   getItem: () => null as string | null,
@@ -54,6 +63,7 @@ function coerceProfile(raw: unknown): Profile {
         ? Math.max(0, p.monthlyBudget)
         : DEFAULT_PROFILE.monthlyBudget,
     theme: isThemeMode(p.theme) ? p.theme : DEFAULT_PROFILE.theme,
+    onboarded: p.onboarded === true,
   };
 }
 
@@ -82,21 +92,6 @@ function parseSnapshot(raw: string): LedgerSnapshot | null {
         updatedAt: typeof root.updatedAt === "string" ? root.updatedAt : new Date().toISOString(),
       };
     }
-
-    // Zustand persist envelope from Rupiya.
-    const state = (root.state ?? root) as Record<string, unknown>;
-    if (Array.isArray(state.transactions)) {
-      const budget =
-        typeof state.monthlyBudget === "number" ? state.monthlyBudget : DEFAULT_PROFILE.monthlyBudget;
-        const inherited =
-          state.profile && typeof state.profile === "object" ? (state.profile as object) : {};
-        return {
-          version: 1,
-          profile: coerceProfile({ ...inherited, monthlyBudget: budget }),
-          transactions: state.transactions.filter(isTx),
-          updatedAt: new Date().toISOString(),
-        };
-    }
   } catch {
     return null;
   }
@@ -106,20 +101,21 @@ function parseSnapshot(raw: string): LedgerSnapshot | null {
 export class LocalLedgerRepository implements LedgerRepository {
   constructor(private readonly store: StorageLike = memory()) {}
 
-  async load(): Promise<LedgerSnapshot | null> {
-    const fresh = this.store.getItem(KEY);
-    if (fresh) return parseSnapshot(fresh);
-    for (const legacy of LEGACY_KEYS) {
-      const raw = this.store.getItem(legacy);
-      if (!raw) continue;
-      const snap = parseSnapshot(raw);
-      if (snap) {
-        await this.save(snap);
-        this.store.removeItem(legacy);
-        return snap;
+  loadSync(): LedgerSnapshot | null {
+    for (const key of LEGACY_KEYS) {
+      try {
+        this.store.removeItem(key);
+      } catch {
+        /* ignore */
       }
     }
+    const fresh = this.store.getItem(LEDGER_KEY);
+    if (fresh) return parseSnapshot(fresh);
     return null;
+  }
+
+  async load(): Promise<LedgerSnapshot | null> {
+    return this.loadSync();
   }
 
   async save(snapshot: LedgerSnapshot): Promise<void> {
@@ -129,7 +125,7 @@ export class LocalLedgerRepository implements LedgerRepository {
       transactions: snapshot.transactions.filter(isTx),
       updatedAt: snapshot.updatedAt || new Date().toISOString(),
     };
-    this.store.setItem(KEY, JSON.stringify(body));
+    this.store.setItem(LEDGER_KEY, JSON.stringify(body));
   }
 }
 

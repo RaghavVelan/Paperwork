@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
 import type { DayRollup, MonthSummary } from "@/lib/finance/selectors";
 import type { Transaction } from "@/lib/finance/types";
@@ -46,71 +46,78 @@ export function HomeView({
   const spentPct = budget > 0 ? Math.min(summary.expense / budget, 1.4) : 0;
   const over = budget > 0 && summary.expense > budget;
   const week = weekDays(todayIso);
+  const empty = summary.count === 0;
 
   return (
     <div className="flex flex-col gap-6 px-5 pt-4 pb-10">
       <header>
-        <h1 className="font-display text-3xl font-medium tracking-tight text-fg">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-fg">
           {greeting(hour, profile.displayName)}
         </h1>
         <p className="mt-1 text-sm text-muted">{monthLabel}</p>
       </header>
 
-      <section className="rounded-3xl bg-surface p-5 shadow-card">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-subtle">
-          Balance this month
-        </p>
-        <p
-          className={cn(
-            "mt-2 font-display text-4xl leading-none tracking-tight tabular-nums",
-            summary.net < 0 ? "text-expense" : "text-fg",
-          )}
-        >
-          {summary.net < 0 ? "−" : ""}
-          {money(Math.abs(summary.net))}
-        </p>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-raised px-3.5 py-3">
-            <p className="text-xs text-muted">In</p>
-            <p className="mt-0.5 font-display text-xl tabular-nums text-income">
-              {money(summary.income)}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-raised px-3.5 py-3">
-            <p className="text-xs text-muted">Out</p>
-            <p className="mt-0.5 font-display text-xl tabular-nums text-expense">
-              {money(summary.expense)}
-            </p>
-          </div>
-        </div>
-        {budget > 0 ? (
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted">Spend limit {money(budget)}</span>
-              <span className={over ? "text-expense" : "text-muted"}>
-                {Math.round((summary.expense / budget) * 100)}%
-              </span>
+      {empty ? (
+        <EmptyState
+          title="Your ledger is empty"
+          body="Add money in or out. It lands on this month and on the calendar."
+          action="Add entry"
+          onAction={onAdd}
+        />
+      ) : (
+        <section className="rounded-3xl bg-surface p-5 shadow-card">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-subtle">
+            Balance this month
+          </p>
+          <p
+            className={cn(
+              "mt-2 font-display text-4xl leading-none font-semibold tracking-tight tabular-nums",
+              summary.net < 0 ? "text-expense" : "text-fg",
+            )}
+          >
+            {summary.net < 0 ? "−" : ""}
+            {money(Math.abs(summary.net))}
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-raised px-3.5 py-3">
+              <p className="text-xs text-muted">In</p>
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-income">
+                {money(summary.income)}
+              </p>
             </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-[width] duration-300",
-                  over ? "bg-expense" : "bg-accent",
-                )}
-                style={{ width: `${Math.min(spentPct, 1) * 100}%` }}
-              />
+            <div className="rounded-2xl bg-raised px-3.5 py-3">
+              <p className="text-xs text-muted">Out</p>
+              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-expense">
+                {money(summary.expense)}
+              </p>
             </div>
           </div>
-        ) : null}
-      </section>
+          {budget > 0 ? (
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted">Spend limit {money(budget)}</span>
+                <span className={over ? "text-expense" : "text-muted"}>
+                  {Math.round((summary.expense / budget) * 100)}%
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-[width] duration-200 ease-out",
+                    over ? "bg-expense" : "bg-accent",
+                  )}
+                  style={{ width: `${Math.min(spentPct, 1) * 100}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
+        </section>
+      )}
 
       <section>
         <div className="mb-2 flex items-center justify-between px-0.5">
           <h2 className="text-sm font-medium text-fg">This week</h2>
-          <Link
-            to="/calendar"
-            className="text-xs font-medium text-muted hover:text-fg"
-          >
+          <Link to="/calendar" className="text-xs font-medium text-muted hover:text-fg">
             Open calendar
           </Link>
         </div>
@@ -171,31 +178,15 @@ export function HomeView({
         </div>
       </section>
 
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-fg">Recent</h2>
-          <Badge>{summary.count} this month</Badge>
-        </div>
-        {recent.length === 0 ? (
-          <EmptyRecent onAdd={onAdd} />
-        ) : (
+      {empty ? null : (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-fg">Recent</h2>
+            <Badge>{summary.count} this month</Badge>
+          </div>
           <GroupedList items={recent} onOpen={onOpenTx} />
-        )}
-      </section>
-    </div>
-  );
-}
-
-function EmptyRecent({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className="rounded-2xl bg-surface px-5 py-8 text-center shadow-card">
-      <p className="font-display text-lg text-fg">No entries yet</p>
-      <p className="mt-1 text-sm text-muted">
-        Add your first in or out. Dates land on the calendar.
-      </p>
-      <Button className="mt-4" onClick={onAdd}>
-        Add entry
-      </Button>
+        </section>
+      )}
     </div>
   );
 }

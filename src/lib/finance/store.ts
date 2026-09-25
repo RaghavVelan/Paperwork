@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { create } from "zustand";
 import { detectTimezone } from "@/lib/ledger/timezones";
 import { getLedgerRepository, toSnapshot } from "@/lib/ledger/repository";
 import { DEFAULT_PROFILE, type Profile } from "@/lib/ledger/types";
-import { buildSeedTransactions } from "./seed";
 import type { Transaction } from "./types";
 
 type Draft = Omit<Transaction, "id" | "createdAt"> & { id?: string };
@@ -11,11 +10,11 @@ type Draft = Omit<Transaction, "id" | "createdAt"> & { id?: string };
 type FinanceState = {
   transactions: Transaction[];
   profile: Profile;
-  hasSeeded: boolean;
   addTransaction: (draft: Draft) => void;
   updateTransaction: (id: string, draft: Draft) => void;
   deleteTransaction: (id: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
+  completeOnboarding: (patch: Partial<Profile>) => void;
 };
 
 function newId(): string {
@@ -25,6 +24,7 @@ function newId(): string {
 
 function persist(state: Pick<FinanceState, "profile" | "transactions">) {
   if (typeof window === "undefined") return;
+  if (!state.profile.onboarded) return;
   void getLedgerRepository().save(toSnapshot(state));
 }
 
@@ -42,9 +42,8 @@ function fromDraft(draft: Draft): Transaction {
 }
 
 export const useFinanceStore = create<FinanceState>((set, get) => ({
-  transactions: buildSeedTransactions(),
+  transactions: [],
   profile: { ...DEFAULT_PROFILE },
-  hasSeeded: true,
   addTransaction: (draft) => {
     const transactions = [fromDraft(draft), ...get().transactions];
     set({ transactions });
@@ -77,36 +76,42 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ profile });
     persist({ profile, transactions: get().transactions });
   },
+  completeOnboarding: (patch) => {
+    const profile = { ...get().profile, ...patch, onboarded: true };
+    set({ profile });
+    persist({ profile, transactions: get().transactions });
+  },
 }));
 
+let didHydrate = false;
+
+function applyPersistedLedger() {
+  const existing = getLedgerRepository().loadSync();
+  if (existing?.profile.onboarded) {
+    const transactions = existing.transactions.filter((tx) => !tx.id.startsWith("seed-"));
+    const profile = existing.profile;
+    useFinanceStore.setState({ transactions, profile });
+    if (transactions.length !== existing.transactions.length) {
+      persist({ profile, transactions });
+    }
+    return;
+  }
+  useFinanceStore.setState({
+    transactions: [],
+    profile: { ...DEFAULT_PROFILE, timezone: detectTimezone() },
+  });
+}
+
+/** Sync localStorage into the store before paint — no onboarding flash, no blank gate. */
 export function useFinanceHydration(): boolean {
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      try {
-        const existing = await getLedgerRepository().load();
-        if (!alive) return;
-        if (existing) {
-          useFinanceStore.setState({
-            transactions: existing.transactions,
-            profile: existing.profile,
-            hasSeeded: true,
-          });
-        } else {
-          const state = useFinanceStore.getState();
-          const profile = { ...state.profile, timezone: detectTimezone() };
-          useFinanceStore.setState({ profile });
-          persist({ profile, transactions: state.transactions });
-        }
-      } finally {
-        if (alive) setHydrated(true);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
+  useLayoutEffect(() => {
+    if (!didHydrate) {
+      applyPersistedLedger();
+      didHydrate = true;
+    }
+    setHydrated(true);
   }, []);
 
   return hydrated;

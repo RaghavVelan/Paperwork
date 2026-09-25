@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import { motion } from "motion/react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { EmptyState } from "@/components/empty-state";
 import { CategoryIcon } from "@/components/category-icon";
 import { categoryById } from "@/lib/finance/categories";
 import type { MonthSummary } from "@/lib/finance/selectors";
@@ -15,11 +15,13 @@ export function InsightsView({
   month,
   summary,
   budget,
+  onAdd,
 }: {
   monthLabel: string;
   month: string;
   summary: MonthSummary;
   budget: number;
+  onAdd: () => void;
 }) {
   const { format: money } = useSettings();
   const monthDate = parseISODate(`${month}-01`);
@@ -47,6 +49,7 @@ export function InsightsView({
       : null;
   const spentPct = budget > 0 ? Math.min(summary.expense / budget, 1.4) : 0;
   const over = budget > 0 && summary.expense > budget;
+  const empty = summary.count === 0;
 
   return (
     <div className="flex flex-col gap-6 px-5 pt-2 pb-8">
@@ -54,74 +57,100 @@ export function InsightsView({
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-subtle">
           Insights
         </p>
-        <h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-fg">
+        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-fg">
           {monthLabel}
         </h1>
         <p className="mt-1 text-sm text-muted">
-          {rate === null
-            ? "Add income to see a save rate."
-            : rate >= 0
-              ? `${rate}% of income kept`
-              : `${Math.abs(rate)}% over income`}
+          {empty
+            ? "Nothing this month yet."
+            : rate === null
+              ? "Add income to see a save rate."
+              : rate >= 0
+                ? `${rate}% of income kept`
+                : `${Math.abs(rate)}% over income`}
         </p>
       </header>
 
-      <section className="grid grid-cols-2 gap-3">
-        <Stat label="In" value={money(summary.income)} tone="income" />
-        <Stat label="Out" value={money(summary.expense)} tone="expense" />
-      </section>
+      {empty ? (
+        <EmptyState
+          title="No picture yet"
+          body="Add an expense or some income this month and the bars will fill in."
+          action="Add entry"
+          onAction={onAdd}
+        />
+      ) : (
+        <>
+          <section className="grid grid-cols-2 gap-3">
+            <Stat label="In" value={money(summary.income)} tone="income" />
+            <Stat label="Out" value={money(summary.expense)} tone="expense" />
+          </section>
 
-      <section className="rounded-3xl bg-surface p-4 shadow-card">
-        <h2 className="mb-3 text-sm font-medium text-fg">Daily spend</h2>
-        <div className="h-40 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={daily} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-              <XAxis
-                dataKey="day"
-                tick={{ fill: "var(--color-subtle)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                interval={4}
-              />
-              <YAxis hide />
-              <Tooltip
-                cursor={{ fill: "color-mix(in oklab, var(--color-fg) 4%, transparent)" }}
-                content={({ active, payload, label }) => {
-                  if (!active || !payload?.[0]) return null;
-                  const v = Number(payload[0].value ?? 0);
-                  return (
-                    <div className="rounded-lg bg-raised px-2.5 py-1.5 text-xs shadow-float">
-                      <span className="text-muted">Day {label}</span>
-                      <span className="ml-2 tabular-nums text-fg">{money(v)}</span>
-                    </div>
-                  );
-                }}
-              />
-              <Bar dataKey="expense" fill="var(--color-expense)" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
+          <section className="rounded-3xl bg-surface p-4 shadow-card">
+            <h2 className="mb-3 text-sm font-medium text-fg">Daily spend</h2>
+            {summary.expense === 0 ? (
+              <p className="py-10 text-center text-sm text-muted">
+                Daily bars show up once you add an expense.
+              </p>
+            ) : (
+              <div className="h-40 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={daily} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fill: "var(--color-subtle)", fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval={4}
+                    />
+                    <YAxis hide />
+                    <Tooltip
+                      cursor={{ fill: "color-mix(in oklab, var(--color-fg) 4%, transparent)" }}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.[0]) return null;
+                        const v = Number(payload[0].value ?? 0);
+                        return (
+                          <div className="rounded-lg bg-raised px-2.5 py-1.5 text-xs shadow-float">
+                            <span className="text-muted">Day {label}</span>
+                            <span className="ml-2 tabular-nums text-fg">{money(v)}</span>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Bar
+                      dataKey="expense"
+                      fill="var(--color-expense)"
+                      radius={[3, 3, 0, 0]}
+                      isAnimationActive={false}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </section>
 
-      <section className="rounded-3xl bg-surface p-4 shadow-card">
-        <h2 className="mb-3 text-sm font-medium text-fg">Where it went</h2>
-        {cats.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted">No expenses this month.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {cats.map((row) => (
-              <CategoryBar
-                key={row.id}
-                id={row.id}
-                amount={row.amount}
-                max={maxCat}
-                total={summary.expense}
-                money={money}
-              />
-            ))}
-          </ul>
-        )}
-      </section>
+          <section className="rounded-3xl bg-surface p-4 shadow-card">
+            <h2 className="mb-3 text-sm font-medium text-fg">Where it went</h2>
+            {cats.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted">
+                Categories fill in as you spend.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {cats.map((row) => (
+                  <CategoryBar
+                    key={row.id}
+                    id={row.id}
+                    amount={row.amount}
+                    max={maxCat}
+                    total={summary.expense}
+                    money={money}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
 
       <section className="rounded-3xl bg-surface p-4 shadow-card">
         <div className="flex items-start justify-between gap-3">
@@ -131,10 +160,7 @@ export function InsightsView({
               {budget > 0 ? money(budget) : "No cap — set one in profile"}
             </p>
           </div>
-          <Link
-            to="/profile"
-            className="text-xs font-medium text-muted hover:text-fg"
-          >
+          <Link to="/profile" className="text-xs font-medium text-muted hover:text-fg">
             Edit
           </Link>
         </div>
@@ -151,7 +177,7 @@ export function InsightsView({
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised">
               <div
                 className={cn(
-                  "h-full rounded-full transition-[width] duration-300",
+                  "h-full rounded-full transition-[width] duration-200 ease-out",
                   over ? "bg-expense" : "bg-accent",
                 )}
                 style={{ width: `${Math.min(spentPct, 1) * 100}%` }}
@@ -178,7 +204,7 @@ function Stat({
       <p className="text-xs text-muted">{label}</p>
       <p
         className={cn(
-          "mt-1 font-display text-2xl tracking-tight tabular-nums",
+          "mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums",
           tone === "income" ? "text-income" : "text-expense",
         )}
       >
@@ -217,11 +243,9 @@ function CategoryBar({
           </span>
         </div>
         <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-raised">
-          <motion.div
-            className="h-full origin-left rounded-full bg-expense/80"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: width / 100 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          <div
+            className="h-full rounded-full bg-expense/80 transition-[width] duration-200 ease-out"
+            style={{ width: `${width}%` }}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { LayoutGroup, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
 import type { DayRollup } from "@/lib/finance/selectors";
 import { transactionsOnDate } from "@/lib/finance/selectors";
@@ -51,7 +51,7 @@ export function CalendarView({
   const selectedTx = transactionsOnDate(transactions, selectedDate);
   const selectedRoll = byDay.get(selectedDate);
   const selectedLabel = format(parseISODate(selectedDate), "EEEE, d MMMM");
-  const monthKey = `${monthStart.getFullYear()}-${monthStart.getMonth()}`;
+  const emptyMonth = [...byDay.values()].every((d) => d.expense === 0 && d.income === 0);
 
   return (
     <div className="flex flex-col gap-5 px-5 pt-2 pb-8">
@@ -60,7 +60,7 @@ export function CalendarView({
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-subtle">
             Calendar
           </p>
-          <h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-fg">
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-fg">
             {format(monthStart, "MMMM yyyy")}
           </h1>
         </div>
@@ -94,77 +94,65 @@ export function CalendarView({
               {w}
             </div>
           ))}
-          <LayoutGroup id={`cal-${monthKey}`}>
-            {cells.map((day, i) => {
-              if (day === null) {
-                return <div key={`e-${i}`} className="min-h-14" />;
-              }
-              const iso = toISODate(
-                new Date(monthStart.getFullYear(), monthStart.getMonth(), day),
-              );
-              const roll = byDay.get(iso);
-              const selected = iso === selectedDate;
-              const isToday = iso === todayIso;
-              const heat = roll ? Math.min(roll.expense / maxExpense, 1) : 0;
-              return (
-                <motion.button
-                  key={iso}
-                  type="button"
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => onSelectDate(iso)}
+          {cells.map((day, i) => {
+            if (day === null) {
+              return <div key={`e-${i}`} className="min-h-14" aria-hidden />;
+            }
+            const iso = toISODate(
+              new Date(monthStart.getFullYear(), monthStart.getMonth(), day),
+            );
+            const roll = byDay.get(iso);
+            const selected = iso === selectedDate;
+            const isToday = iso === todayIso;
+            const heat = roll ? Math.min(roll.expense / maxExpense, 1) : 0;
+            return (
+              <button
+                key={iso}
+                type="button"
+                onClick={() => onSelectDate(iso)}
+                className={cn(
+                  "relative m-0.5 flex min-h-14 flex-col items-center justify-start rounded-xl px-0.5 pt-1.5 pb-1 transition-colors duration-150",
+                  selected
+                    ? "bg-accent text-accent-fg"
+                    : isToday
+                      ? "bg-raised text-fg"
+                      : "text-fg hover:bg-raised",
+                )}
+                style={
+                  !selected && heat > 0
+                    ? {
+                        backgroundColor: `color-mix(in oklab, var(--color-expense) ${Math.round(heat * 22)}%, transparent)`,
+                      }
+                    : undefined
+                }
+              >
+                <span
                   className={cn(
-                    "relative m-0.5 flex min-h-14 flex-col items-center justify-start rounded-xl px-0.5 pt-1.5 pb-1",
-                    selected
-                      ? "text-accent-fg"
-                      : isToday
-                        ? "text-fg"
-                        : "text-fg hover:bg-raised",
+                    "text-xs font-medium tabular-nums",
+                    selected ? "text-accent-fg" : isToday ? "text-accent" : "text-fg",
                   )}
-                  style={
-                    !selected && heat > 0
-                      ? {
-                          backgroundColor: `color-mix(in oklab, var(--color-expense) ${Math.round(heat * 22)}%, transparent)`,
-                        }
-                      : undefined
-                  }
                 >
-                  {selected ? (
-                    <motion.span
-                      layoutId="cal-day-pill"
-                      className="absolute inset-0 rounded-xl bg-accent"
-                      transition={{ type: "spring", duration: 0.32, bounce: 0 }}
-                    />
-                  ) : isToday ? (
-                    <span className="absolute inset-0 rounded-xl bg-raised" />
-                  ) : null}
+                  {day}
+                </span>
+                {roll ? (
                   <span
                     className={cn(
-                      "relative z-10 text-xs font-medium tabular-nums",
-                      selected ? "text-accent-fg" : isToday ? "text-accent" : "text-fg",
+                      "mt-0.5 max-w-full truncate text-2xs font-medium leading-tight tabular-nums",
+                      selected
+                        ? "text-accent-fg/80"
+                        : roll.net >= 0
+                          ? "text-income"
+                          : "text-expense",
                     )}
                   >
-                    {day}
+                    {roll.expense > 0 && roll.income === 0
+                      ? formatCompact(roll.expense)
+                      : formatCompact(Math.abs(roll.net))}
                   </span>
-                  {roll ? (
-                    <span
-                      className={cn(
-                        "relative z-10 mt-0.5 max-w-full truncate text-2xs font-medium leading-tight tabular-nums",
-                        selected
-                          ? "text-accent-fg/80"
-                          : roll.net >= 0
-                            ? "text-income"
-                            : "text-expense",
-                      )}
-                    >
-                      {roll.expense > 0 && roll.income === 0
-                        ? formatCompact(roll.expense)
-                        : formatCompact(Math.abs(roll.net))}
-                    </span>
-                  ) : null}
-                </motion.button>
-              );
-            })}
-          </LayoutGroup>
+                ) : null}
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -184,9 +172,16 @@ export function CalendarView({
         </div>
         {selectedTx.length > 0 ? (
           <GroupedList items={selectedTx} onOpen={onOpenTx} />
+        ) : emptyMonth ? (
+          <EmptyState
+            title="This month is empty"
+            body="Add an in or out and it lands on the grid."
+            action="Add entry"
+            onAction={() => onAdd(selectedDate)}
+          />
         ) : (
           <p className="rounded-2xl bg-surface px-4 py-8 text-center text-sm text-muted shadow-card">
-            Tap a day, then add an entry.
+            Nothing on this day.
           </p>
         )}
       </section>

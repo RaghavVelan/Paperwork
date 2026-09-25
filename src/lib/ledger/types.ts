@@ -19,6 +19,7 @@ export type Profile = {
   timezone: string;
   monthlyBudget: number;
   theme: ThemeMode;
+  onboarded: boolean;
 };
 
 /** The unit we persist today and will sync after login. */
@@ -33,6 +34,7 @@ export const DEFAULT_PROFILE: Profile = {
   displayName: "",
   currency: "INR",
   timezone: "Asia/Kolkata",
-  monthlyBudget: 40000,
+  monthlyBudget: 0,
   theme: "system",
+  onboarded: false,
 };
