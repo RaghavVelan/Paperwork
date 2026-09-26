@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { HomeView, monthTitle } from "@/components/home-view";
+import { monthAutoPays } from "@/lib/finance/autopay";
 import { monthFromDate, summarize } from "@/lib/finance/selectors";
 import { useSheetStore } from "@/lib/finance/sheet";
 import { useFinanceStore } from "@/lib/finance/store";
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/")({ component: HomePage });
 
 function HomePage() {
   const transactions = useFinanceStore((s) => s.transactions);
+  const autoPayList = useFinanceStore((s) => s.autoPays);
   const budget = useFinanceStore((s) => s.profile.monthlyBudget);
   const openNew = useSheetStore((s) => s.openNew);
   const openEdit = useSheetStore((s) => s.openEdit);
@@ -17,6 +19,10 @@ function HomePage() {
   const [selectedDate, setSelectedDate] = useState(todayIso);
 
   const summary = useMemo(() => summarize(transactions, month), [transactions, month]);
+  const autoPays = useMemo(
+    () => monthAutoPays(autoPayList, month, todayIso),
+    [autoPayList, month, todayIso],
+  );
 
   const recent = useMemo(() => {
     return [...transactions]
@@ -39,6 +45,7 @@ function HomePage() {
       onSelectDate={setSelectedDate}
       onOpenTx={openEdit}
       onAdd={() => openNew()}
+      autoPays={autoPays}
     />
   );
 }

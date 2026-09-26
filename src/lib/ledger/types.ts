@@ -1,3 +1,4 @@
+import type { AutoPay } from "@/lib/finance/autopay";
 import type { Transaction } from "@/lib/finance/types";
 import type { ThemeMode } from "@/lib/theme";
 
@@ -27,6 +28,7 @@ export type LedgerSnapshot = {
   version: 1;
   profile: Profile;
   transactions: Transaction[];
+  autoPays: AutoPay[];
   updatedAt: string;
 };
 

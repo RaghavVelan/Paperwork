@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
+import { kindLabel, type MonthAutoPay } from "@/lib/finance/autopay";
 import type { DayRollup, MonthSummary } from "@/lib/finance/selectors";
 import type { Transaction } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
@@ -31,6 +32,7 @@ export function HomeView({
   onSelectDate,
   onOpenTx,
   onAdd,
+  autoPays,
 }: {
   monthLabel: string;
   summary: MonthSummary;
@@ -41,6 +43,7 @@ export function HomeView({
   onSelectDate: (iso: string) => void;
   onOpenTx: (id: string) => void;
   onAdd: () => void;
+  autoPays: MonthAutoPay[];
 }) {
   const { format: money, todayIso, hour, profile } = useSettings();
   const spentPct = budget > 0 ? Math.min(summary.expense / budget, 1.4) : 0;
@@ -176,6 +179,49 @@ export function HomeView({
             );
           })}
         </div>
+      </section>
+
+      <section>
+        <div className="mb-2 flex items-center justify-between px-0.5">
+          <h2 className="text-sm font-medium text-fg">Auto pays</h2>
+          <Link to="/autopay" className="text-xs font-medium text-muted hover:text-fg">
+            Manage
+          </Link>
+        </div>
+        {autoPays.length === 0 ? (
+          <Link
+            to="/autopay"
+            className="block rounded-2xl bg-surface px-4 py-4 text-sm text-muted shadow-card"
+          >
+            Set UPI mandates, SIPs, and loans. They post on the debit day.
+          </Link>
+        ) : (
+          <ul className="flex flex-col gap-1 rounded-2xl bg-surface px-2 py-2 shadow-card">
+            {autoPays.slice(0, 4).map((row) => (
+              <li
+                key={row.autoPay.id}
+                className="flex items-center gap-3 rounded-xl px-2 py-2"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-fg">{row.autoPay.name}</span>
+                  <span className="block truncate text-xs text-subtle">
+                    {kindLabel(row.autoPay.kind)} · {format(parseISODate(row.date), "d MMM")}
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm tabular-nums text-expense">
+                  −{money(row.autoPay.amount)}
+                </span>
+                <Badge
+                  variant={
+                    row.status === "posted" ? "default" : row.status === "due" ? "expense" : "accent"
+                  }
+                >
+                  {row.status === "posted" ? "Posted" : row.status === "due" ? "Due" : "Soon"}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {empty ? null : (

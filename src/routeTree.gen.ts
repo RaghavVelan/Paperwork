@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AutopayRouteImport } from './routes/autopay'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -17,6 +19,16 @@ import { Route as ProfileRouteImport } from './routes/profile'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutopayRoute = AutopayRouteImport.update({
+  id: '/autopay',
+  path: '/autopay',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -37,12 +49,16 @@ const ProfileRoute = ProfileRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/autopay': typeof AutopayRoute
   '/calendar': typeof CalendarRoute
   '/insights': typeof InsightsRoute
   '/profile': typeof ProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/autopay': typeof AutopayRoute
   '/calendar': typeof CalendarRoute
   '/insights': typeof InsightsRoute
   '/profile': typeof ProfileRoute
@@ -50,20 +66,32 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/autopay': typeof AutopayRoute
   '/calendar': typeof CalendarRoute
   '/insights': typeof InsightsRoute
   '/profile': typeof ProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/calendar' | '/insights' | '/profile'
+  fullPaths:
+    '/' | '/about' | '/autopay' | '/calendar' | '/insights' | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/insights' | '/profile'
-  id: '__root__' | '/' | '/calendar' | '/insights' | '/profile'
+  to: '/' | '/about' | '/autopay' | '/calendar' | '/insights' | '/profile'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/autopay'
+    | '/calendar'
+    | '/insights'
+    | '/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AutopayRoute: typeof AutopayRoute
   CalendarRoute: typeof CalendarRoute
   InsightsRoute: typeof InsightsRoute
   ProfileRoute: typeof ProfileRoute
@@ -76,6 +104,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/autopay': {
+      id: '/autopay'
+      path: '/autopay'
+      fullPath: '/autopay'
+      preLoaderRoute: typeof AutopayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -104,6 +146,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AutopayRoute: AutopayRoute,
   CalendarRoute: CalendarRoute,
   InsightsRoute: InsightsRoute,
   ProfileRoute: ProfileRoute,

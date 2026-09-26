@@ -31,6 +31,7 @@ export type Transaction = {
   date: string;
   payment: PaymentMethod;
   createdAt: string;
+  autoPayId?: string;
 };
 
 export type TabId = "home" | "calendar" | "insights";

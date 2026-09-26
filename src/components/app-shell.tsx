@@ -96,7 +96,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Plus className="size-4" />
             Add entry
           </Button>
-          <div className="mt-auto">
+          <div className="mt-auto flex flex-col gap-1">
+            <AppLink
+              href="/about"
+              active={pathname.startsWith("/about")}
+              className={cn(
+                "rounded-xl px-3 py-2 text-xs text-subtle transition-colors duration-150 hover:bg-raised hover:text-fg",
+                pathname.startsWith("/about") && "bg-surface text-muted shadow-card",
+              )}
+            >
+              About
+            </AppLink>
             <AppLink
               href="/profile"
               active={profileActive}
@@ -159,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
             aria-label="Main"
           >
-            <div className="mx-auto grid max-w-xl grid-cols-3 px-2 pt-1">
+            <div className="mx-auto grid max-w-xl grid-cols-4 px-1 pt-1">
               {NAV_ITEMS.map((item) => {
                 const active = item.match(pathname);
                 const Icon = item.icon;

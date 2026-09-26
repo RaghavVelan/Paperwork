@@ -1,7 +1,8 @@
-import { DEFAULT_PROFILE, type LedgerSnapshot, type Profile } from "./types";
-import { isCurrencyCode } from "./currencies";
+import { coerceAutoPay, type AutoPay } from "@/lib/finance/autopay";
 import type { Transaction } from "@/lib/finance/types";
 import { isThemeMode } from "@/lib/theme";
+import { isCurrencyCode } from "./currencies";
+import { DEFAULT_PROFILE, type LedgerSnapshot, type Profile } from "./types";
 
 /**
  * Persistence boundary.
@@ -78,24 +79,35 @@ function isTx(value: unknown): value is Transaction {
   );
 }
 
-function parseSnapshot(raw: string): LedgerSnapshot | null {
+function coerceSnapshot(root: Record<string, unknown>): LedgerSnapshot | null {
+  if (root.version !== 1 || !Array.isArray(root.transactions)) return null;
+  const autoPays: AutoPay[] = Array.isArray(root.autoPays)
+    ? root.autoPays.map(coerceAutoPay).filter((v): v is AutoPay => v !== null)
+    : [];
+  return {
+    version: 1,
+    profile: coerceProfile(root.profile),
+    transactions: root.transactions.filter(isTx).map((t) => ({
+      ...t,
+      autoPayId: typeof t.autoPayId === "string" ? t.autoPayId : undefined,
+    })),
+    autoPays,
+    updatedAt: typeof root.updatedAt === "string" ? root.updatedAt : new Date().toISOString(),
+  };
+}
+
+export function parseLedgerJson(raw: string): LedgerSnapshot | null {
   try {
     const data = JSON.parse(raw) as unknown;
     if (!data || typeof data !== "object") return null;
     const root = data as Record<string, unknown>;
-
-    if (root.version === 1 && Array.isArray(root.transactions)) {
-      return {
-        version: 1,
-        profile: coerceProfile(root.profile),
-        transactions: root.transactions.filter(isTx),
-        updatedAt: typeof root.updatedAt === "string" ? root.updatedAt : new Date().toISOString(),
-      };
+    if (root.kind === "paperwork.ledger.export" && root.snapshot && typeof root.snapshot === "object") {
+      return coerceSnapshot(root.snapshot as Record<string, unknown>);
     }
+    return coerceSnapshot(root);
   } catch {
     return null;
   }
-  return null;
 }
 
 export class LocalLedgerRepository implements LedgerRepository {
@@ -110,7 +122,7 @@ export class LocalLedgerRepository implements LedgerRepository {
       }
     }
     const fresh = this.store.getItem(LEDGER_KEY);
-    if (fresh) return parseSnapshot(fresh);
+    if (fresh) return parseLedgerJson(fresh);
     return null;
   }
 
@@ -123,6 +135,7 @@ export class LocalLedgerRepository implements LedgerRepository {
       version: 1,
       profile: coerceProfile(snapshot.profile),
       transactions: snapshot.transactions.filter(isTx),
+      autoPays: snapshot.autoPays ?? [],
       updatedAt: snapshot.updatedAt || new Date().toISOString(),
     };
     this.store.setItem(LEDGER_KEY, JSON.stringify(body));
@@ -140,11 +153,13 @@ export function getLedgerRepository(): LedgerRepository {
 export function toSnapshot(input: {
   profile: Profile;
   transactions: Transaction[];
+  autoPays: AutoPay[];
 }): LedgerSnapshot {
   return {
     version: 1,
     profile: input.profile,
     transactions: input.transactions,
+    autoPays: input.autoPays,
     updatedAt: new Date().toISOString(),
   };
 }

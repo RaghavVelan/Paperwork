@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { initialsFrom } from "@/components/profile-avatar";
+import { LedgerTransfer } from "@/components/ledger-transfer";
 import { CURRENCIES } from "@/lib/ledger/currencies";
 import { timezoneChoices } from "@/lib/ledger/timezones";
 import type { CurrencyCode, Profile } from "@/lib/ledger/types";
@@ -149,6 +151,25 @@ export function ProfileView() {
         <Button className="mt-5 w-full rounded-xl" onClick={saveAll}>
           Save profile
         </Button>
+      </section>
+
+      <LedgerTransfer />
+
+      <section className="flex flex-col gap-2">
+        <Link
+          to="/autopay"
+          className="flex min-h-12 items-center justify-between rounded-2xl bg-surface px-4 text-sm text-fg shadow-card"
+        >
+          Auto pays
+          <span className="text-xs text-subtle">Mandates, SIPs, loans</span>
+        </Link>
+        <Link
+          to="/about"
+          className="flex min-h-12 items-center justify-between rounded-2xl bg-surface px-4 text-sm text-fg shadow-card"
+        >
+          About Paperwork
+          <span className="text-xs text-subtle">Raghav Velan</span>
+        </Link>
       </section>
     </div>
   );

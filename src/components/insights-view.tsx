@@ -16,12 +16,14 @@ export function InsightsView({
   summary,
   budget,
   onAdd,
+  autoPayTotal,
 }: {
   monthLabel: string;
   month: string;
   summary: MonthSummary;
   budget: number;
   onAdd: () => void;
+  autoPayTotal: number;
 }) {
   const { format: money } = useSettings();
   const monthDate = parseISODate(`${month}-01`);
@@ -164,6 +166,11 @@ export function InsightsView({
             Edit
           </Link>
         </div>
+        {autoPayTotal > 0 ? (
+          <p className="mt-2 text-xs text-muted">
+            {money(autoPayTotal)} of this month is auto pays.
+          </p>
+        ) : null}
         {budget > 0 ? (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs">
