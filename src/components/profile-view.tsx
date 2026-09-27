@@ -165,10 +165,9 @@ export function ProfileView() {
         </Link>
         <Link
           to="/about"
-          className="flex min-h-12 items-center justify-between rounded-2xl bg-surface px-4 text-sm text-fg shadow-card"
+          className="flex min-h-12 items-center rounded-2xl bg-surface px-4 text-sm text-fg shadow-card"
         >
           About Paperwork
-          <span className="text-xs text-subtle">Raghav Velan</span>
         </Link>
       </section>
     </div>

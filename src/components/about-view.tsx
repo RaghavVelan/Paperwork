@@ -3,6 +3,25 @@ import { ArrowUpRight, Linkedin, Mail } from "lucide-react";
 const EMAIL = "vraghav950@gmail.com";
 const LINKEDIN = "https://www.linkedin.com/in/raghav-velan";
 
+const CHANGELOG = [
+  {
+    date: "27 Sep 2026",
+    items: [
+      "Install as Paperwork on the home screen.",
+      "Works offline after the first visit. Later pushes still show up when you’re online.",
+    ],
+  },
+  {
+    date: "26 Sep 2026",
+    items: [
+      "Auto pays for UPI mandates, SIPs, and loans, with an optional last date.",
+      "Export and import the ledger to move between devices.",
+      "About page.",
+      "First public release: empty-start onboarding, calendar, insights, theme, and a local ledger.",
+    ],
+  },
+] as const;
+
 export function AboutView() {
   return (
     <div className="flex flex-col gap-8 px-5 pt-2 pb-10">
@@ -13,7 +32,8 @@ export function AboutView() {
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
           A quiet personal ledger. Money in and out on this device, on a calendar — no account
-          required. Auto pays cover the monthly stuff: UPI mandates, SIPs, loans.
+          required. Auto pays cover the monthly stuff: UPI mandates, SIPs, loans. After the first
+          visit it works offline; add it to your home screen as Paperwork.
         </p>
       </header>
 
@@ -27,6 +47,26 @@ export function AboutView() {
         <p className="mt-2 text-sm leading-relaxed text-muted">
           Designed and built as a calm place to see what actually moved this month.
         </p>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-fg">Changelog</h2>
+        <ol className="flex flex-col gap-3">
+          {CHANGELOG.map((entry, index) => (
+            <li key={`${entry.date}-${index}`} className="rounded-2xl bg-surface px-4 py-4 shadow-card">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-subtle">
+                {entry.date}
+              </p>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {entry.items.map((item) => (
+                  <li key={item} className="text-sm leading-relaxed text-muted">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section>

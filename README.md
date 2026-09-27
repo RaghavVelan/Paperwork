@@ -6,6 +6,10 @@ New devices start on a short setup (name, timezone, spend cap) and an empty ledg
 
 Live: [https://paperwork-rv.vercel.app](https://paperwork-rv.vercel.app)
 
+Install it from the browser as **Paperwork** (Add to Home Screen / Install app). After the first visit it works offline — the ledger stays on the device. A later sync can plug in when a server is added.
+
+## Stack
+
 ## Stack
 
 - React 19 + TypeScript

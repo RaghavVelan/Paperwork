@@ -151,29 +151,60 @@ export function stripInstallParams(url) {
   return rest ? `${path}?${rest}` : path;
 }
 
-export function renderInstallPageHtml(template, { host, url } = {}) {
+export function renderInstallPageHtml(template, { host, url, site } = {}) {
   return String(template)
-    .replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host)))
+    .replaceAll("{{APP_NAME}}", escapeHtml(displayAppName(host, site)))
     .replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
 }
 
-export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
+export function displayAppName(hostHeader, site = readOgSite()) {
+  const fromHost = appNameFromHost(hostHeader);
+  if (fromHost !== DEFAULT_APP_NAME) return fromHost;
+  const fromSite = String(site?.title ?? "").trim();
+  return fromSite || DEFAULT_APP_NAME;
+}
+
+export function renderWebManifest(hostHeader, site = readOgSite()) {
+  const name = displayAppName(hostHeader, site);
+  const colorRaw = String(site?.color ?? "").trim();
+  const hex = colorRaw.startsWith("#") ? colorRaw.slice(1) : colorRaw;
+  const color = /^[0-9a-fA-F]{6}$/.test(hex) ? `#${hex}` : "#0C0C0D";
   return JSON.stringify(
     {
       name,
       short_name: name,
+      description: String(site?.description ?? "").trim() || "A quiet personal ledger.",
       id: "/",
       start_url: "/",
       scope: "/",
       display: "standalone",
-      background_color: "#000000",
-      theme_color: "#000000",
+      display_override: ["standalone", "minimal-ui"],
+      background_color: color,
+      theme_color: color,
+      lang: "en",
       icons: [
         {
           src: "/__grok/icon-180.png",
           sizes: "180x180",
           type: "image/png",
+        },
+        {
+          src: "/icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon-512-maskable.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
         },
       ],
     },
