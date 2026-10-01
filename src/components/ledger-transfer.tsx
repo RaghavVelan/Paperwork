@@ -69,7 +69,7 @@ export function LedgerTransfer() {
   const summary = pending ? summarizeSnapshot(pending) : null;
 
   return (
-    <section className="rounded-3xl bg-surface p-5 shadow-card">
+    <section className="rounded-3xl bg-raised p-5">
       <h2 className="text-sm font-medium text-fg">Move to another device</h2>
       <p className="mt-1 text-sm text-muted">
         Everything lives in this browser. Export a file here, then import it on the new phone

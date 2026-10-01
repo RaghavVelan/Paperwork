@@ -7,6 +7,7 @@ import { AppLink } from "@/components/app-link";
 import { NAV_ITEMS } from "@/components/nav-items";
 import { Onboarding } from "@/components/onboarding";
 import { AvatarMark, ProfileAvatar } from "@/components/profile-avatar";
+import { ProfileSheet } from "@/components/profile-sheet";
 import { ThemeController, useResolvedTheme } from "@/components/theme-controller";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TransactionSheet } from "@/components/transaction-sheet";
@@ -24,6 +25,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const openNew = useSheetStore((s) => s.openNew);
   const sheetOpen = useSheetStore((s) => s.open);
   const setSheetOpen = useSheetStore((s) => s.setOpen);
+  const profileOpen = useSheetStore((s) => s.profileOpen);
+  const openProfile = useSheetStore((s) => s.openProfile);
+  const auxOpen = useSheetStore((s) => s.auxOpen);
   const editingId = useSheetStore((s) => s.editingId);
   const draftDate = useSheetStore((s) => s.draftDate);
   const transactions = useFinanceStore((s) => s.transactions);
@@ -33,7 +37,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const editing = editingId
     ? (transactions.find((t) => t.id === editingId) ?? null)
     : null;
-  const profileActive = pathname.startsWith("/profile");
+  const profileActive = profileOpen;
+  const chromeHidden = sheetOpen || profileOpen || auxOpen;
 
   const chrome = (
     <>
@@ -107,11 +112,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               About
             </AppLink>
-            <AppLink
-              href="/profile"
-              active={profileActive}
+            <button
+              type="button"
+              onClick={() => openProfile()}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-raised",
+                "flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors duration-150 hover:bg-raised",
                 profileActive && "bg-surface shadow-card",
               )}
             >
@@ -124,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   Name, currency, cap
                 </span>
               </span>
-            </AppLink>
+            </button>
           </div>
         </aside>
 
@@ -165,7 +170,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav
             className={cn(
               "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/90 pb-safe backdrop-blur-md transition-opacity duration-200 lg:hidden",
-              sheetOpen && "pointer-events-none opacity-0",
+              chromeHidden && "pointer-events-none opacity-0",
             )}
             aria-label="Main"
           >
@@ -198,6 +203,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           editing={editing}
           defaultDate={draftDate || todayIso}
         />
+        <ProfileSheet />
       </div>
     </MotionConfig>
   );

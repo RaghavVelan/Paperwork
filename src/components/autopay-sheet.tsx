@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/components/category-icon";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -13,6 +21,7 @@ import {
 } from "@/lib/finance/autopay";
 import { categoriesFor, PAYMENTS } from "@/lib/finance/categories";
 import { useFinanceStore } from "@/lib/finance/store";
+import { useSheetStore } from "@/lib/finance/sheet";
 import type { CategoryId, PaymentMethod } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { groupDigits, parseAmountInput } from "@/lib/money";
@@ -28,8 +37,8 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
   const addAutoPay = useFinanceStore((s) => s.addAutoPay);
   const updateAutoPay = useFinanceStore((s) => s.updateAutoPay);
   const deleteAutoPay = useFinanceStore((s) => s.deleteAutoPay);
+  const setAuxOpen = useSheetStore((s) => s.setAuxOpen);
   const { format: money, symbol, currency, todayIso } = useSettings();
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const [kind, setKind] = useState<AutoPayKind>("upi_mandate");
   const [name, setName] = useState("");
@@ -39,6 +48,11 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
   const [dayOfMonth, setDayOfMonth] = useState(5);
   const [startDate, setStartDate] = useState(todayIso);
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    setAuxOpen(open);
+    return () => setAuxOpen(false);
+  }, [open, setAuxOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -62,22 +76,7 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
       setStartDate(todayIso);
       setEndDate("");
     }
-    panelRef.current?.scrollTo({ top: 0 });
   }, [open, editing, todayIso]);
-
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open, onOpenChange]);
 
   const cats = useMemo(() => categoriesFor("expense"), []);
   const parsed = parseAmountInput(amount);
@@ -131,40 +130,13 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
   }
 
   return (
-    <div
-      className={cn(
-        "pw-sheet-root fixed inset-0 z-50 overflow-hidden",
-        open ? "pointer-events-auto" : "pointer-events-none",
-      )}
-      data-open={open ? "true" : "false"}
-      aria-hidden={!open}
-    >
-      <button
-        type="button"
-        tabIndex={open ? 0 : -1}
-        className="pw-sheet-overlay absolute inset-0 bg-bg/70"
-        aria-label="Close"
-        onClick={() => onOpenChange(false)}
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal={open}
-        aria-labelledby="autopay-title"
-        inert={!open ? true : undefined}
-        className="pw-sheet-panel absolute inset-x-0 bottom-0 mx-auto max-h-[92dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl bg-surface shadow-float"
-      >
-        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-border" />
-        <div className="px-5 pt-3 pb-2">
-          <h2 id="autopay-title" className="font-display text-xl font-semibold tracking-tight text-fg">
-            {editing ? "Edit auto pay" : "New auto pay"}
-          </h2>
-          <p className="text-sm text-muted">
-            Posts itself on the debit day. Set a last date if it ends.
-          </p>
-        </div>
-
-        <div className="px-5 pb-8">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>{editing ? "Edit auto pay" : "New auto pay"}</DrawerTitle>
+          <DrawerDescription>Posts itself on the debit day. Set a last date if it ends.</DrawerDescription>
+        </DrawerHeader>
+        <DrawerBody>
           <Label>Type</Label>
           <div className="mt-1.5 mb-5 flex flex-wrap gap-2">
             {AUTO_PAY_KINDS.map((k) => (
@@ -310,8 +282,8 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
               </Button>
             ) : null}
           </div>
-        </div>
-      </div>
-    </div>
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -65,6 +65,10 @@ function coerceProfile(raw: unknown): Profile {
         : DEFAULT_PROFILE.monthlyBudget,
     theme: isThemeMode(p.theme) ? p.theme : DEFAULT_PROFILE.theme,
     onboarded: p.onboarded === true,
+    privacyAcceptedAt:
+      typeof p.privacyAcceptedAt === "string" && p.privacyAcceptedAt.length > 0
+        ? p.privacyAcceptedAt
+        : undefined,
   };
 }
 

@@ -21,6 +21,8 @@ export type Profile = {
   monthlyBudget: number;
   theme: ThemeMode;
   onboarded: boolean;
+  /** Set when a new user agrees on onboarding. Older ledgers may omit it. */
+  privacyAcceptedAt?: string;
 };
 
 /** The unit we persist today and will sync after login. */

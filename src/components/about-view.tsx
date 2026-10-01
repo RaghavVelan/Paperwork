@@ -1,9 +1,17 @@
 import { ArrowUpRight, Linkedin, Mail } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 const EMAIL = "vraghav950@gmail.com";
 const LINKEDIN = "https://www.linkedin.com/in/raghav-velan";
 
 const CHANGELOG = [
+  {
+    date: "1 Oct 2026",
+    items: [
+      "Privacy policy — agree on first run, read anytime from Profile.",
+      "Profile is a sheet. Drag any sheet down from the top to close it.",
+    ],
+  },
   {
     date: "27 Sep 2026",
     items: [
@@ -67,6 +75,16 @@ export function AboutView() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-medium text-fg">Legal</h2>
+        <Link
+          to="/privacy"
+          className="flex min-h-12 items-center rounded-2xl bg-surface px-4 text-sm text-fg shadow-card"
+        >
+          Privacy policy
+        </Link>
       </section>
 
       <section>

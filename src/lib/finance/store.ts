@@ -203,7 +203,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     persist({ profile, transactions: get().transactions, autoPays: get().autoPays });
   },
   completeOnboarding: (patch) => {
-    const profile = { ...get().profile, ...patch, onboarded: true };
+    const profile = {
+      ...get().profile,
+      ...patch,
+      onboarded: true,
+      privacyAcceptedAt: patch.privacyAcceptedAt ?? new Date().toISOString(),
+    };
     set({ profile });
     persist({ profile, transactions: get().transactions, autoPays: get().autoPays });
   },

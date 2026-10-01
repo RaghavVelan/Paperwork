@@ -1,8 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ProfileView } from "@/components/profile-view";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useSheetStore } from "@/lib/finance/sheet";
 
-export const Route = createFileRoute("/profile")({ component: ProfilePage });
+export const Route = createFileRoute("/profile")({ component: ProfileRedirect });
 
-function ProfilePage() {
-  return <ProfileView />;
+function ProfileRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    useSheetStore.getState().openProfile();
+    void navigate({ to: "/", replace: true });
+  }, [navigate]);
+  return null;
 }

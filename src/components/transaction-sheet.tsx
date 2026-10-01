@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoryIcon } from "@/components/category-icon";
@@ -29,7 +37,6 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
   const updateTransaction = useFinanceStore((s) => s.updateTransaction);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
   const { format: money, symbol, currency, todayIso } = useSettings();
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const [type, setType] = useState<TxType>("expense");
   const [amount, setAmount] = useState("");
@@ -55,22 +62,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
       setDate(defaultDate || todayIso);
       setPayment("upi");
     }
-    panelRef.current?.scrollTo({ top: 0 });
   }, [open, editing, defaultDate, todayIso]);
-
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open, onOpenChange]);
 
   const cats = useMemo(() => categoriesFor(type), [type]);
   const parsed = parseAmountInput(amount);
@@ -105,40 +97,15 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
   }
 
   return (
-    <div
-      className={cn(
-        "pw-sheet-root fixed inset-0 z-50 overflow-hidden",
-        open ? "pointer-events-auto" : "pointer-events-none",
-      )}
-      data-open={open ? "true" : "false"}
-      aria-hidden={!open}
-    >
-      <button
-        type="button"
-        tabIndex={open ? 0 : -1}
-        className="pw-sheet-overlay absolute inset-0 bg-bg/70"
-        aria-label="Close"
-        onClick={() => onOpenChange(false)}
-      />
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal={open}
-        aria-labelledby="entry-title"
-        inert={!open ? true : undefined}
-        className="pw-sheet-panel absolute inset-x-0 bottom-0 mx-auto max-h-[92dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl bg-surface shadow-float"
-      >
-        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-border" />
-        <div className="px-5 pt-3 pb-2">
-          <h2 id="entry-title" className="font-display text-xl font-semibold tracking-tight text-fg">
-            {editing ? "Edit entry" : "New entry"}
-          </h2>
-          <p className="text-sm text-muted">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>{editing ? "Edit entry" : "New entry"}</DrawerTitle>
+          <DrawerDescription>
             Amounts use {currency} ({symbol}), grouped for that locale.
-          </p>
-        </div>
-
-        <div className="px-5 pb-8">
+          </DrawerDescription>
+        </DrawerHeader>
+        <DrawerBody>
           <div className="relative mb-5 grid grid-cols-2 gap-1 rounded-xl bg-raised p-1">
             <span
               aria-hidden
@@ -273,8 +240,8 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
               </Button>
             ) : null}
           </div>
-        </div>
-      </div>
-    </div>
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -10,13 +10,11 @@ Install it from the browser as **Paperwork** (Add to Home Screen / Install app).
 
 ## Stack
 
-## Stack
-
 - React 19 + TypeScript
 - TanStack Start (file routes, SSR)
 - Vite 8 + Tailwind v4
 - Manrope
-- Motion for micro-interactions (sheet uses CSS so it always fully closes)
+- Vaul drawers (drag down to close)
 - Zustand for transactions + profile
 - Recharts on Insights
 
@@ -42,10 +40,10 @@ npm run build
 | `/calendar` | Month grid with daily spend |
 | `/autopay` | Monthly auto pays (UPI mandates, SIPs, loans) |
 | `/insights` | Daily bars, categories, save rate |
-| `/profile` | Name, currency, timezone, budget, export / import |
-| `/about` | Product, developed by, contact |
+| `/about` | Product, developed by, changelog, contact |
+| `/privacy` | Privacy policy |
 
-Add / edit is a bottom sheet, not a route. Auto pays post an expense on the debit day until an optional last date. Appearance is light, dark, or follow the system. Profile can export a JSON file and import it on another device — that replaces the ledger on the destination.
+Add / edit, auto pays, and **profile** are bottom sheets — drag down from the top to close, like iOS. Auto pays post an expense on the debit day until an optional last date. Appearance is light, dark, or follow the system. Profile can export a JSON file and import it on another device — that replaces the ledger on the destination. New users agree to the privacy policy on first run.
 
 ## Data
 

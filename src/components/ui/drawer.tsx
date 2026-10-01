@@ -2,7 +2,34 @@ import * as React from "react";
 import { Drawer as Vaul } from "vaul";
 import { cn } from "@/lib/utils";
 
-export const Drawer = Vaul.Root;
+export function Drawer({
+  shouldScaleBackground = false,
+  repositionInputs = true,
+  ...props
+}: React.ComponentProps<typeof Vaul.Root>) {
+  return (
+    <Vaul.Root
+      shouldScaleBackground={shouldScaleBackground}
+      repositionInputs={repositionInputs}
+      {...props}
+    />
+  );
+}
+
+export function NestedDrawer({
+  shouldScaleBackground = false,
+  repositionInputs = true,
+  ...props
+}: React.ComponentProps<typeof Vaul.NestedRoot>) {
+  return (
+    <Vaul.NestedRoot
+      shouldScaleBackground={shouldScaleBackground}
+      repositionInputs={repositionInputs}
+      {...props}
+    />
+  );
+}
+
 export const DrawerTrigger = Vaul.Trigger;
 export const DrawerClose = Vaul.Close;
 export const DrawerPortal = Vaul.Portal;
@@ -29,12 +56,12 @@ export function DrawerContent({
       <DrawerOverlay />
       <Vaul.Content
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-3xl bg-surface pt-3 shadow-float outline-none",
+          "fixed inset-x-0 bottom-0 z-50 mx-auto flex h-auto max-h-[92dvh] w-full max-w-lg flex-col rounded-t-3xl bg-surface shadow-float outline-none",
           className,
         )}
         {...props}
       >
-        <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-border" />
+        <Vaul.Handle className="mx-auto mt-1 mb-0 flex h-7 w-full items-center justify-center bg-transparent !shadow-none after:block after:h-1 after:w-10 after:rounded-full after:bg-border" />
         {children}
       </Vaul.Content>
     </DrawerPortal>
@@ -42,7 +69,19 @@ export function DrawerContent({
 }
 
 export function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("grid gap-1 px-5 pb-3", className)} {...props} />;
+  return <div className={cn("shrink-0 px-5 pt-3 pb-2", className)} {...props} />;
+}
+
+export function DrawerBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function DrawerTitle({
@@ -51,7 +90,7 @@ export function DrawerTitle({
 }: React.ComponentProps<typeof Vaul.Title>) {
   return (
     <Vaul.Title
-      className={cn("font-display text-xl font-medium tracking-tight text-fg", className)}
+      className={cn("font-display text-xl font-semibold tracking-tight text-fg", className)}
       {...props}
     />
   );

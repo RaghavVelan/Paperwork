@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { PrivacySheet } from "@/components/privacy-sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useFinanceStore } from "@/lib/finance/store";
 import { detectTimezone, timezoneChoices } from "@/lib/ledger/timezones";
@@ -23,9 +24,11 @@ export function Onboarding() {
   const [budget, setBudget] = useState(
     profile.monthlyBudget > 0 ? String(profile.monthlyBudget) : "",
   );
+  const [agreed, setAgreed] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const zones = timezoneChoices();
-  const ready = name.trim().length > 0;
+  const ready = name.trim().length > 0 && agreed;
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -34,6 +37,7 @@ export function Onboarding() {
       displayName: name.trim(),
       timezone,
       monthlyBudget: Math.max(0, Math.round(parseAmountInput(budget))),
+      privacyAcceptedAt: new Date().toISOString(),
     });
   }
 
@@ -119,12 +123,38 @@ export function Onboarding() {
               <p className="mt-1.5 text-xs text-subtle">Leave blank if you don’t want a cap yet.</p>
             </div>
 
+            <label className="flex items-start gap-3 rounded-2xl bg-raised px-3 py-3">
+              <input
+                id="onboard-privacy"
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-1 size-4 shrink-0 accent-current"
+              />
+              <span className="text-sm leading-relaxed text-muted">
+                I agree to the{" "}
+                <button
+                  type="button"
+                  className="font-medium text-fg underline decoration-border underline-offset-4"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPrivacyOpen(true);
+                  }}
+                >
+                  Privacy policy
+                </button>
+                . The ledger stays on this device.
+              </span>
+            </label>
+
             <Button type="submit" className="mt-1 h-12 w-full rounded-xl" disabled={!ready}>
               Start with an empty ledger
             </Button>
           </motion.form>
         </motion.div>
       </main>
+      <PrivacySheet open={privacyOpen} onOpenChange={setPrivacyOpen} />
     </div>
   );
 }

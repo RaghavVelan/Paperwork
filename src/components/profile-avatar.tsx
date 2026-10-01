@@ -1,5 +1,5 @@
-import { AppLink } from "@/components/app-link";
 import { useFinanceStore } from "@/lib/finance/store";
+import { useSheetStore } from "@/lib/finance/sheet";
 import { cn } from "@/lib/utils";
 
 export function initialsFrom(name: string): string {
@@ -41,10 +41,11 @@ export function ProfileAvatar({
   active?: boolean;
 }) {
   const name = useFinanceStore((s) => s.profile.displayName);
+  const openProfile = useSheetStore((s) => s.openProfile);
   return (
-    <AppLink href="/profile" active={active} className="inline-flex">
+    <button type="button" onClick={() => openProfile()} className="inline-flex">
       <span className="sr-only">Profile</span>
       <AvatarMark name={name} size={size} active={active} />
-    </AppLink>
+    </button>
   );
 }
