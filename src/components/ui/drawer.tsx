@@ -16,22 +16,6 @@ export function Drawer({
   );
 }
 
-export function NestedDrawer({
-  shouldScaleBackground = false,
-  repositionInputs = true,
-  ...props
-}: React.ComponentProps<typeof Vaul.NestedRoot>) {
-  return (
-    <Vaul.NestedRoot
-      shouldScaleBackground={shouldScaleBackground}
-      repositionInputs={repositionInputs}
-      {...props}
-    />
-  );
-}
-
-export const DrawerTrigger = Vaul.Trigger;
-export const DrawerClose = Vaul.Close;
 export const DrawerPortal = Vaul.Portal;
 
 export function DrawerOverlay({

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AutopayRouteImport } from './routes/autopay'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -37,6 +38,11 @@ const CalendarRoute = CalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/autopay': typeof AutopayRoute
   '/calendar': typeof CalendarRoute
+  '/guide': typeof GuideRoute
   '/insights': typeof InsightsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/autopay': typeof AutopayRoute
   '/calendar': typeof CalendarRoute
+  '/guide': typeof GuideRoute
   '/insights': typeof InsightsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/autopay': typeof AutopayRoute
   '/calendar': typeof CalendarRoute
+  '/guide': typeof GuideRoute
   '/insights': typeof InsightsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/autopay'
     | '/calendar'
+    | '/guide'
     | '/insights'
     | '/privacy'
     | '/profile'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/autopay'
     | '/calendar'
+    | '/guide'
     | '/insights'
     | '/privacy'
     | '/profile'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/autopay'
     | '/calendar'
+    | '/guide'
     | '/insights'
     | '/privacy'
     | '/profile'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AutopayRoute: typeof AutopayRoute
   CalendarRoute: typeof CalendarRoute
+  GuideRoute: typeof GuideRoute
   InsightsRoute: typeof InsightsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/insights': {
       id: '/insights'
       path: '/insights'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AutopayRoute: AutopayRoute,
   CalendarRoute: CalendarRoute,
+  GuideRoute: GuideRoute,
   InsightsRoute: InsightsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,

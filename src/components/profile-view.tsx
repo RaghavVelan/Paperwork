@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { LedgerTransfer } from "@/components/ledger-transfer";
 import { CURRENCIES } from "@/lib/ledger/currencies";
 import { timezoneChoices } from "@/lib/ledger/timezones";
+import { WEEKDAYS } from "@/lib/ledger/backup";
 import type { CurrencyCode, Profile } from "@/lib/ledger/types";
 import { useFinanceStore } from "@/lib/finance/store";
 import { formatMoney, groupDigits, parseAmountInput } from "@/lib/money";
@@ -138,6 +139,36 @@ export function ProfileView({ onOpenPrivacy, onNavigate }: Props) {
             {profile.monthlyBudget > 0 ? `Current cap ${preview}` : "No cap set"}
           </p>
         </div>
+
+        <div>
+          <Label htmlFor="backup-day">Weekly backup day</Label>
+          <Select
+            id="backup-day"
+            className="mt-1.5"
+            value={String(profile.backupWeekday)}
+            onChange={(e) => {
+              save({ backupWeekday: Number(e.target.value) }, true);
+            }}
+          >
+            {WEEKDAYS.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.label}
+              </option>
+            ))}
+          </Select>
+          <p className="mt-1.5 text-xs text-muted">
+            A banner asks for a JSON download on this day, once a week.
+          </p>
+          <label className="mt-3 flex items-start gap-3 text-sm text-muted">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-current"
+              checked={profile.backupReminder !== false}
+              onChange={(e) => save({ backupReminder: e.target.checked }, true)}
+            />
+            Remind me on that day
+          </label>
+        </div>
       </div>
 
       <Button className="h-11 w-full rounded-xl" onClick={saveAll}>
@@ -147,6 +178,13 @@ export function ProfileView({ onOpenPrivacy, onNavigate }: Props) {
       <LedgerTransfer />
 
       <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => go("/guide")}
+          className="flex min-h-12 items-center rounded-2xl bg-raised px-4 text-left text-sm text-fg"
+        >
+          Backup & restore guide
+        </button>
         <button
           type="button"
           onClick={() => (onOpenPrivacy ? onOpenPrivacy() : go("/privacy"))}

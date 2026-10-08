@@ -29,6 +29,17 @@ export function zonedHour(date: Date, timeZone: string): number {
   }
 }
 
+/** 0 Sunday … 6 Saturday, matching Date.getDay, in the named zone. */
+export function zonedWeekday(date: Date, timeZone: string): number {
+  try {
+    const wd = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(date);
+    const i = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(wd.slice(0, 3));
+    return i >= 0 ? i : date.getUTCDay();
+  } catch {
+    return date.getUTCDay();
+  }
+}
+
 export function addDaysISO(iso: string, days: number): string {
   const [y, m, d] = iso.split("-").map(Number);
   const next = new Date(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days);

@@ -1,9 +1,11 @@
 import { format } from "date-fns";
+import { Eye, EyeOff } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
 import { kindLabel, type MonthAutoPay } from "@/lib/finance/autopay";
+import { useFinanceStore } from "@/lib/finance/store";
 import type { DayRollup, MonthSummary } from "@/lib/finance/selectors";
 import type { Transaction } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
@@ -46,6 +48,8 @@ export function HomeView({
   autoPays: MonthAutoPay[];
 }) {
   const { format: money, todayIso, hour, profile } = useSettings();
+  const updateProfile = useFinanceStore((s) => s.updateProfile);
+  const hidden = profile.hideBalance !== false;
   const spentPct = budget > 0 ? Math.min(summary.expense / budget, 1.4) : 0;
   const over = budget > 0 && summary.expense > budget;
   const week = weekDays(todayIso);
@@ -69,51 +73,70 @@ export function HomeView({
         />
       ) : (
         <section className="rounded-3xl bg-surface p-5 shadow-card">
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-subtle">
-            Balance this month
-          </p>
-          <p
-            className={cn(
-              "mt-2 font-display text-4xl leading-none font-semibold tracking-tight tabular-nums",
-              summary.net < 0 ? "text-expense" : "text-fg",
-            )}
-          >
-            {summary.net < 0 ? "−" : ""}
-            {money(Math.abs(summary.net))}
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-raised px-3.5 py-3">
-              <p className="text-xs text-muted">In</p>
-              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-income">
-                {money(summary.income)}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-raised px-3.5 py-3">
-              <p className="text-xs text-muted">Out</p>
-              <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-expense">
-                {money(summary.expense)}
-              </p>
-            </div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-subtle">
+              Balance this month
+            </p>
+            <button
+              type="button"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-raised hover:text-fg"
+              aria-pressed={!hidden}
+              aria-label={hidden ? "Show balance" : "Hide balance"}
+              onClick={() => updateProfile({ hideBalance: !hidden })}
+            >
+              {hidden ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
           </div>
-          {budget > 0 ? (
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted">Spend limit {money(budget)}</span>
-                <span className={over ? "text-expense" : "text-muted"}>
-                  {Math.round((summary.expense / budget) * 100)}%
-                </span>
+          <div
+            className={cn(
+              "transition-[filter] duration-200 ease-out",
+              hidden && "pointer-events-none select-none blur-[12px]",
+            )}
+            aria-hidden={hidden}
+          >
+            <p
+              className={cn(
+                "mt-1 font-display text-4xl leading-none font-semibold tracking-tight tabular-nums",
+                summary.net < 0 ? "text-expense" : "text-fg",
+              )}
+            >
+              {summary.net < 0 ? "−" : ""}
+              {money(Math.abs(summary.net))}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-raised px-3.5 py-3">
+                <p className="text-xs text-muted">In</p>
+                <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-income">
+                  {money(summary.income)}
+                </p>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-[width] duration-200 ease-out",
-                    over ? "bg-expense" : "bg-accent",
-                  )}
-                  style={{ width: `${Math.min(spentPct, 1) * 100}%` }}
-                />
+              <div className="rounded-2xl bg-raised px-3.5 py-3">
+                <p className="text-xs text-muted">Out</p>
+                <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-expense">
+                  {money(summary.expense)}
+                </p>
               </div>
             </div>
-          ) : null}
+            {budget > 0 ? (
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted">Spend limit {money(budget)}</span>
+                  <span className={over ? "text-expense" : "text-muted"}>
+                    {Math.round((summary.expense / budget) * 100)}%
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-raised">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-[width] duration-200 ease-out",
+                      over ? "bg-expense" : "bg-accent",
+                    )}
+                    style={{ width: `${Math.min(spentPct, 1) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
         </section>
       )}
 

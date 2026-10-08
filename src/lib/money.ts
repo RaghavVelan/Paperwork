@@ -23,11 +23,6 @@ export function formatMoney(
   return formatter(currency, withMinor).format(withMinor ? amount : Math.round(amount));
 }
 
-/** @deprecated use formatMoney */
-export function formatInr(amount: number, withPaise = false): string {
-  return formatMoney(amount, "INR", withPaise);
-}
-
 export function formatCompactMoney(amount: number, currency: CurrencyCode = "INR"): string {
   const abs = Math.abs(amount);
   const sign = amount < 0 ? "−" : "";
@@ -50,16 +45,6 @@ export function formatCompactMoney(amount: number, currency: CurrencyCode = "INR
   if (abs >= 1_000_000) return `${sign}${meta.symbol}${(abs / 1_000_000).toFixed(1)}M`;
   if (abs >= 1_000) return `${sign}${meta.symbol}${(abs / 1_000).toFixed(1)}k`;
   return `${sign}${formatMoney(abs, currency)}`;
-}
-
-export function formatInrCompact(amount: number): string {
-  return formatCompactMoney(amount, "INR");
-}
-
-export function formatSignedMoney(amount: number, currency: CurrencyCode): string {
-  if (amount > 0) return `+${formatMoney(amount, currency)}`;
-  if (amount < 0) return `−${formatMoney(Math.abs(amount), currency)}`;
-  return formatMoney(0, currency);
 }
 
 export function groupDigits(raw: string, currency: CurrencyCode = "INR"): string {
@@ -105,8 +90,4 @@ export function addMonths(d: Date, n: number): Date {
 
 export function daysInMonth(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-}
-
-export function isSameISODate(a: string, b: string): boolean {
-  return a === b;
 }

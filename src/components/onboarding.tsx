@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { BrandWordmark } from "@/components/brand-mark";
 import { PrivacySheet } from "@/components/privacy-sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useFinanceStore } from "@/lib/finance/store";
@@ -44,7 +45,7 @@ export function Onboarding() {
   return (
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="flex items-center justify-between px-5 py-4">
-        <p className="font-display text-lg font-semibold tracking-tight text-fg">Paperwork</p>
+        <BrandWordmark markSize={28} titleClassName="text-lg" />
         <ThemeToggle />
       </header>
 

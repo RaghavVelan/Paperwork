@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
 import { Toaster } from "sonner";
 import { AppLink } from "@/components/app-link";
+import { BackupBanner } from "@/components/backup-banner";
+import { BrandWordmark } from "@/components/brand-mark";
 import { NAV_ITEMS } from "@/components/nav-items";
 import { Onboarding } from "@/components/onboarding";
 import { AvatarMark, ProfileAvatar } from "@/components/profile-avatar";
@@ -66,9 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-h-dvh bg-bg lg:flex">
         <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border px-4 py-6 lg:flex">
           <AppLink href="/" className="px-2">
-            <p className="font-display text-2xl font-semibold tracking-tight text-fg">
-              Paperwork
-            </p>
+            <BrandWordmark markSize={32} titleClassName="text-2xl" />
             <p className="mt-1 text-xs text-subtle">A quiet personal ledger</p>
           </AppLink>
           <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
@@ -136,9 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-bg/85 px-4 py-3 backdrop-blur-md">
             <AppLink href="/" className="lg:hidden">
-              <p className="font-display text-xl font-semibold tracking-tight text-fg">
-                Paperwork
-              </p>
+              <BrandWordmark markSize={28} />
             </AppLink>
             <div className="ml-auto flex items-center gap-2">
               <ThemeToggle />
@@ -156,6 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </header>
 
           <main className="flex-1 pb-24 lg:pb-10">
+            <BackupBanner />
             <motion.div
               key={pathname}
               initial={{ opacity: 0, y: 8 }}

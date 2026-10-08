@@ -1,5 +1,5 @@
 import { monthKey } from "@/lib/money";
-import type { CategoryId, Transaction, TxType } from "./types";
+import type { CategoryId, Transaction } from "./types";
 
 export type DayRollup = {
   date: string;
@@ -72,12 +72,4 @@ export function transactionsOnDate(
 
 export function monthFromDate(date: string): string {
   return monthKey(date);
-}
-
-export function filterByType(
-  transactions: Transaction[],
-  type: TxType | "all",
-): Transaction[] {
-  if (type === "all") return transactions;
-  return transactions.filter((t) => t.type === type);
 }

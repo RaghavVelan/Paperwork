@@ -2,6 +2,7 @@ import { coerceAutoPay, type AutoPay } from "@/lib/finance/autopay";
 import type { Transaction } from "@/lib/finance/types";
 import { isThemeMode } from "@/lib/theme";
 import { isCurrencyCode } from "./currencies";
+import { isBackupWeekday } from "./backup";
 import { DEFAULT_PROFILE, type LedgerSnapshot, type Profile } from "./types";
 
 /**
@@ -69,6 +70,15 @@ function coerceProfile(raw: unknown): Profile {
       typeof p.privacyAcceptedAt === "string" && p.privacyAcceptedAt.length > 0
         ? p.privacyAcceptedAt
         : undefined,
+    backupWeekday: isBackupWeekday(p.backupWeekday) ? p.backupWeekday : 1,
+    backupReminder: p.backupReminder !== false,
+    lastBackupAt:
+      typeof p.lastBackupAt === "string" && p.lastBackupAt.length > 0 ? p.lastBackupAt : undefined,
+    backupSnoozedOn:
+      typeof p.backupSnoozedOn === "string" && p.backupSnoozedOn.length > 0
+        ? p.backupSnoozedOn
+        : undefined,
+    hideBalance: p.hideBalance !== false,
   };
 }
 

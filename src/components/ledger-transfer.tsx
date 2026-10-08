@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useFinanceStore } from "@/lib/finance/store";
 import {
   buildExport,
-  downloadJson,
-  exportFilename,
   readExport,
   summarizeSnapshot,
 } from "@/lib/ledger/transfer";
+import { useLedgerBackup } from "@/lib/ledger/use-backup";
 import type { LedgerSnapshot } from "@/lib/ledger/types";
-import { useSettings } from "@/lib/ledger/use-settings";
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
@@ -19,15 +17,9 @@ export function LedgerTransfer() {
   const transactions = useFinanceStore((s) => s.transactions);
   const autoPays = useFinanceStore((s) => s.autoPays);
   const replaceLedger = useFinanceStore((s) => s.replaceLedger);
-  const { todayIso } = useSettings();
+  const { downloadBackup } = useLedgerBackup();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<LedgerSnapshot | null>(null);
-
-  function exportFile() {
-    const body = buildExport({ profile, transactions, autoPays });
-    downloadJson(exportFilename(todayIso), body);
-    toast.success("Ledger file downloaded");
-  }
 
   async function copyFile() {
     const body = buildExport({ profile, transactions, autoPays });
@@ -89,7 +81,7 @@ export function LedgerTransfer() {
       />
 
       {pending && summary ? (
-        <div className="mt-4 rounded-2xl bg-raised p-4">
+        <div className="mt-4 rounded-2xl bg-surface p-4">
           <p className="text-sm text-fg">
             Replace this device with <span className="font-medium">{summary.name}</span>?
           </p>
@@ -112,7 +104,7 @@ export function LedgerTransfer() {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button variant="secondary" className="h-11 rounded-xl" onClick={exportFile}>
+          <Button variant="secondary" className="h-11 rounded-xl" onClick={downloadBackup}>
             Export
           </Button>
           <Button

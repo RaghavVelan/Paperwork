@@ -6,19 +6,16 @@ import {
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-  NestedDrawer,
 } from "@/components/ui/drawer";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nested?: boolean;
 };
 
-export function PrivacySheet({ open, onOpenChange, nested = false }: Props) {
-  const Root = nested ? NestedDrawer : Drawer;
+export function PrivacySheet({ open, onOpenChange }: Props) {
   return (
-    <Root open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>Privacy policy</DrawerTitle>
@@ -28,6 +25,6 @@ export function PrivacySheet({ open, onOpenChange, nested = false }: Props) {
           <PrivacyView compact />
         </DrawerBody>
       </DrawerContent>
-    </Root>
+    </Drawer>
   );
 }

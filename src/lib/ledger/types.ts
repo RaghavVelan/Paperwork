@@ -23,6 +23,15 @@ export type Profile = {
   onboarded: boolean;
   /** Set when a new user agrees on onboarding. Older ledgers may omit it. */
   privacyAcceptedAt?: string;
+  /** 0 Sunday … 6 Saturday. Default Monday. */
+  backupWeekday: number;
+  /** Weekly reminder on the chosen day. Default on. */
+  backupReminder: boolean;
+  lastBackupAt?: string;
+  /** ISO date the reminder was dismissed for. */
+  backupSnoozedOn?: string;
+  /** Hide amounts on the home balance card. Missing in older ledgers → true. */
+  hideBalance: boolean;
 };
 
 /** The unit we persist today and will sync after login. */
@@ -41,4 +50,7 @@ export const DEFAULT_PROFILE: Profile = {
   monthlyBudget: 0,
   theme: "system",
   onboarded: false,
+  backupWeekday: 1,
+  backupReminder: true,
+  hideBalance: true,
 };

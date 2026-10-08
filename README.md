@@ -36,14 +36,15 @@ npm run build
 
 | Path | Screen |
 |---|---|
-| `/` | Home — month balance, week strip, auto pays, recent entries |
+| `/` | Home — month balance (blurred until you tap the eye), week strip, auto pays, recent entries |
 | `/calendar` | Month grid with daily spend |
 | `/autopay` | Monthly auto pays (UPI mandates, SIPs, loans) |
 | `/insights` | Daily bars, categories, save rate |
-| `/about` | Product, developed by, changelog, contact |
+| `/about` | Product, version, changelog, contact |
 | `/privacy` | Privacy policy |
+| `/guide` | How to back up and restore from a JSON file |
 
-Add / edit, auto pays, and **profile** are bottom sheets — drag down from the top to close, like iOS. Auto pays post an expense on the debit day until an optional last date. Appearance is light, dark, or follow the system. Profile can export a JSON file and import it on another device — that replaces the ledger on the destination. New users agree to the privacy policy on first run.
+Add / edit, auto pays, and **profile** are bottom sheets — drag down from the top to close, like iOS. Auto pays post an expense on the debit day until an optional last date. Appearance is light, dark, or follow the system. Profile can export a JSON file and import it on another device — that replaces the ledger on the destination. New users agree to the privacy policy on first run. A weekly banner reminds you to download a backup on a day you pick in Profile. The home balance card starts blurred; the eye shows or hides amounts and only that preference is saved — entries stay put.
 
 ## Data
 
