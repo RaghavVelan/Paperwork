@@ -1,10 +1,21 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { EmptyState } from "@/components/empty-state";
+import { GroupedList } from "@/components/grouped-list";
 import { CategoryIcon } from "@/components/category-icon";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { categoryById } from "@/lib/finance/categories";
 import type { MonthSummary } from "@/lib/finance/selectors";
+import { useSheetStore } from "@/lib/finance/sheet";
+import { useFinanceStore } from "@/lib/finance/store";
 import type { CategoryId } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { daysInMonth, parseISODate, startOfMonth, toISODate } from "@/lib/money";
@@ -26,6 +37,9 @@ export function InsightsView({
   autoPayTotal: number;
 }) {
   const { format: money } = useSettings();
+  const transactions = useFinanceStore((s) => s.transactions);
+  const openEdit = useSheetStore((s) => s.openEdit);
+  const [categoryId, setCategoryId] = useState<CategoryId | null>(null);
   const monthDate = parseISODate(`${month}-01`);
   const start = startOfMonth(monthDate);
   const dim = daysInMonth(start);
@@ -44,7 +58,19 @@ export function InsightsView({
       .sort((a, b) => b.amount - a.amount);
   }, [summary.byCategory]);
 
-  const maxCat = cats[0]?.amount ?? 1;
+  const categoryRows = useMemo(() => {
+    if (!categoryId) return [];
+    return transactions
+      .filter(
+        (tx) =>
+          tx.type === "expense" &&
+          tx.categoryId === categoryId &&
+          tx.date.startsWith(month),
+      )
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  }, [categoryId, month, transactions]);
+  const categoryTotal = categoryRows.reduce((sum, tx) => sum + tx.amount, 0);
+  const categoryLabel = categoryId ? categoryById(categoryId).label : "";
   const rate =
     summary.income > 0
       ? Math.round(((summary.income - summary.expense) / summary.income) * 100)
@@ -143,9 +169,10 @@ export function InsightsView({
                     key={row.id}
                     id={row.id}
                     amount={row.amount}
-                    max={maxCat}
+                    max={cats[0]?.amount ?? 1}
                     total={summary.expense}
                     money={money}
+                    onOpen={() => setCategoryId(row.id)}
                   />
                 ))}
               </ul>
@@ -193,6 +220,26 @@ export function InsightsView({
           </div>
         ) : null}
       </section>
+
+      <Drawer open={categoryId !== null} onOpenChange={(next) => { if (!next) setCategoryId(null); }}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{categoryLabel}</DrawerTitle>
+            <DrawerDescription>
+              {categoryRows.length === 0
+                ? "Nothing in this category this month."
+                : `${money(categoryTotal)} · ${categoryRows.length} ${categoryRows.length === 1 ? "entry" : "entries"}`}
+            </DrawerDescription>
+          </DrawerHeader>
+          <DrawerBody>
+            {categoryRows.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted">No entries this month.</p>
+            ) : (
+              <GroupedList items={categoryRows} onOpen={openEdit} />
+            )}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
@@ -227,35 +274,43 @@ function CategoryBar({
   max,
   total,
   money,
+  onOpen,
 }: {
   id: CategoryId;
   amount: number;
   max: number;
   total: number;
   money: (n: number) => string;
+  onOpen: () => void;
 }) {
   const cat = categoryById(id);
   const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
   const width = max > 0 ? Math.max((amount / max) * 100, 4) : 0;
   return (
-    <li className="flex items-center gap-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-raised text-muted">
-        <CategoryIcon id={id} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-sm text-fg">{cat.label}</span>
-          <span className="shrink-0 text-xs tabular-nums text-muted">
-            {money(amount)} · {pct}%
+    <li>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center gap-3 rounded-xl py-1 text-left transition-colors duration-150 hover:bg-raised"
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-raised text-muted">
+          <CategoryIcon id={id} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-sm text-fg">{cat.label}</span>
+            <span className="shrink-0 text-xs tabular-nums text-muted">
+              {money(amount)} · {pct}%
+            </span>
           </span>
-        </div>
-        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-raised">
-          <div
-            className="h-full rounded-full bg-expense/80 transition-[width] duration-200 ease-out"
-            style={{ width: `${width}%` }}
-          />
-        </div>
-      </div>
+          <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-raised">
+            <span
+              className="block h-full rounded-full bg-expense/80 transition-[width] duration-200 ease-out"
+              style={{ width: `${width}%` }}
+            />
+          </span>
+        </span>
+      </button>
     </li>
   );
 }

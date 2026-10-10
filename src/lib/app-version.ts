@@ -1,10 +1,18 @@
-export const APP_VERSION = "1.4.0";
+export const APP_VERSION = "1.5.0";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.5.0",
+    date: "8 Oct 2026",
+    items: [
+      "Tap a category in Insights to see that month’s entries.",
+      "The phone back button closes an open sheet before leaving the page.",
+    ],
+  },
   {
     version: "1.4.0",
     date: "7 Oct 2026",

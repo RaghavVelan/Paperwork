@@ -1,16 +1,33 @@
 import * as React from "react";
 import { Drawer as Vaul } from "vaul";
+import { bindSheetHistory, unbindSheetHistory } from "@/lib/sheet-history";
 import { cn } from "@/lib/utils";
+
+function useSheetHistory(open: boolean, onClose: () => void) {
+  const onCloseRef = React.useRef(onClose);
+  onCloseRef.current = onClose;
+
+  React.useEffect(() => {
+    if (!open) return;
+    const token = bindSheetHistory(() => onCloseRef.current());
+    return () => unbindSheetHistory(token);
+  }, [open]);
+}
 
 export function Drawer({
   shouldScaleBackground = false,
   repositionInputs = true,
+  open,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof Vaul.Root>) {
+  useSheetHistory(open === true, () => onOpenChange?.(false));
   return (
     <Vaul.Root
       shouldScaleBackground={shouldScaleBackground}
       repositionInputs={repositionInputs}
+      open={open}
+      onOpenChange={onOpenChange}
       {...props}
     />
   );
