@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,8 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CategoryIcon } from "@/components/category-icon";
+import { CategoryPicker } from "@/components/category-picker";
 import {
-  categoriesFor,
   defaultCategory,
   PAYMENTS,
 } from "@/lib/finance/categories";
@@ -64,7 +63,6 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
     }
   }, [open, editing, defaultDate, todayIso]);
 
-  const cats = useMemo(() => categoriesFor(type), [type]);
   const parsed = parseAmountInput(amount);
 
   function onTypeChange(next: TxType) {
@@ -153,29 +151,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
           </div>
 
           <Label>Category</Label>
-          <div className="mt-1.5 mb-5 grid grid-cols-4 gap-2">
-            {cats.map((c) => {
-              const active = categoryId === c.id;
-              return (
-                <motion.button
-                  key={c.id}
-                  type="button"
-                  whileTap={tapScale}
-                  transition={transition.tap}
-                  onClick={() => setCategoryId(c.id)}
-                  className={cn(
-                    "flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-center",
-                    active ? "bg-accent text-accent-fg" : "bg-raised text-muted shadow-card",
-                  )}
-                >
-                  <CategoryIcon id={c.id} className="size-4" />
-                  <span className="line-clamp-1 text-2xs font-medium leading-tight">
-                    {c.label}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
+          <CategoryPicker type={type} value={categoryId} onChange={setCategoryId} />
 
           <div className="mb-5 grid grid-cols-2 gap-3">
             <div>

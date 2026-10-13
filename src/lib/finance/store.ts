@@ -1,11 +1,12 @@
 import { useLayoutEffect, useState } from "react";
 import { create } from "zustand";
+import { categoriesFor } from "@/lib/finance/categories";
 import { dueDates, type AutoPay } from "@/lib/finance/autopay";
 import { detectTimezone } from "@/lib/ledger/timezones";
 import { getLedgerRepository, toSnapshot } from "@/lib/ledger/repository";
 import { DEFAULT_PROFILE, type LedgerSnapshot, type Profile } from "@/lib/ledger/types";
 import { zonedISODate } from "@/lib/time";
-import type { Transaction } from "./types";
+import type { CustomCategory, Transaction } from "./types";
 
 type Draft = Omit<Transaction, "id" | "createdAt"> & { id?: string };
 type AutoPayDraft = Omit<AutoPay, "id" | "createdAt" | "postedMonths"> & {
@@ -16,6 +17,7 @@ type AutoPayDraft = Omit<AutoPay, "id" | "createdAt" | "postedMonths"> & {
 type FinanceState = {
   transactions: Transaction[];
   autoPays: AutoPay[];
+  categories: CustomCategory[];
   profile: Profile;
   addTransaction: (draft: Draft) => void;
   updateTransaction: (id: string, draft: Draft) => void;
@@ -25,6 +27,7 @@ type FinanceState = {
   deleteAutoPay: (id: string) => void;
   materializeAutoPays: (todayIso: string) => void;
   replaceLedger: (snapshot: LedgerSnapshot) => void;
+  addCategory: (label: string, type: Transaction["type"]) => CustomCategory | null;
   updateProfile: (patch: Partial<Profile>) => void;
   completeOnboarding: (patch: Partial<Profile>) => void;
 };
@@ -37,7 +40,8 @@ function newId(): string {
 function persist(state: Pick<FinanceState, "profile" | "transactions" | "autoPays">) {
   if (typeof window === "undefined") return;
   if (!state.profile.onboarded) return;
-  void getLedgerRepository().save(toSnapshot(state));
+  const categories = useFinanceStore.getState().categories;
+  void getLedgerRepository().save(toSnapshot({ ...state, categories }));
 }
 
 function fromDraft(draft: Draft): Transaction {
@@ -89,6 +93,7 @@ function applyDue(autoPays: AutoPay[], transactions: Transaction[], todayIso: st
 export const useFinanceStore = create<FinanceState>((set, get) => ({
   transactions: [],
   autoPays: [],
+  categories: [],
   profile: { ...DEFAULT_PROFILE },
   addTransaction: (draft) => {
     const transactions = [fromDraft(draft), ...get().transactions];
@@ -184,10 +189,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
   replaceLedger: (snapshot) => {
     const profile = { ...snapshot.profile, onboarded: true };
+    const categories = snapshot.categories ?? [];
     const todayIso = zonedISODate(new Date(), profile.timezone);
     const next = applyDue(snapshot.autoPays ?? [], snapshot.transactions, todayIso);
     set({
       profile,
+      categories,
       transactions: next.transactions,
       autoPays: next.autoPays,
     });
@@ -196,6 +203,21 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       transactions: next.transactions,
       autoPays: next.autoPays,
     });
+  },
+  addCategory: (label, type) => {
+    const name = label.trim().replace(/\s+/g, " ").slice(0, 24);
+    if (!name) return null;
+    const existing = categoriesFor(type, get().categories);
+    if (existing.some((c) => c.label.toLowerCase() === name.toLowerCase())) return null;
+    const item: CustomCategory = { id: `c-${newId()}`, label: name, type };
+    const categories = [...get().categories, item];
+    set({ categories });
+    persist({
+      profile: get().profile,
+      transactions: get().transactions,
+      autoPays: get().autoPays,
+    });
+    return item;
   },
   updateProfile: (patch) => {
     const profile = { ...get().profile, ...patch };
@@ -222,11 +244,13 @@ function applyPersistedLedger() {
     const transactions = existing.transactions.filter((tx) => !tx.id.startsWith("seed-"));
     const profile = existing.profile;
     const autoPays = existing.autoPays ?? [];
+    const categories = existing.categories ?? [];
     const todayIso = zonedISODate(new Date(), profile.timezone);
     const next = applyDue(autoPays, transactions, todayIso);
     useFinanceStore.setState({
       transactions: next.transactions,
       autoPays: next.autoPays,
+      categories,
       profile,
     });
     if (next.changed || transactions.length !== existing.transactions.length) {
@@ -237,6 +261,7 @@ function applyPersistedLedger() {
   useFinanceStore.setState({
     transactions: [],
     autoPays: [],
+    categories: [],
     profile: { ...DEFAULT_PROFILE, timezone: detectTimezone() },
   });
 }

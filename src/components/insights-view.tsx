@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
 import { CategoryIcon } from "@/components/category-icon";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerBody,
@@ -12,7 +14,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { categoryById } from "@/lib/finance/categories";
+import { categoryById, isInvestmentCategory } from "@/lib/finance/categories";
 import type { MonthSummary } from "@/lib/finance/selectors";
 import { useSheetStore } from "@/lib/finance/sheet";
 import { useFinanceStore } from "@/lib/finance/store";
@@ -28,6 +30,9 @@ export function InsightsView({
   budget,
   onAdd,
   autoPayTotal,
+  canGoForward,
+  onPrevMonth,
+  onNextMonth,
 }: {
   monthLabel: string;
   month: string;
@@ -35,11 +40,18 @@ export function InsightsView({
   budget: number;
   onAdd: () => void;
   autoPayTotal: number;
+  canGoForward: boolean;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
 }) {
   const { format: money } = useSettings();
   const transactions = useFinanceStore((s) => s.transactions);
+  const custom = useFinanceStore((s) => s.categories);
   const openEdit = useSheetStore((s) => s.openEdit);
   const [categoryId, setCategoryId] = useState<CategoryId | null>(null);
+  useEffect(() => {
+    setCategoryId(null);
+  }, [month]);
   const monthDate = parseISODate(`${month}-01`);
   const start = startOfMonth(monthDate);
   const dim = daysInMonth(start);
@@ -48,9 +60,22 @@ export function InsightsView({
     return Array.from({ length: dim }, (_, i) => {
       const iso = toISODate(new Date(start.getFullYear(), start.getMonth(), i + 1));
       const roll = summary.byDay.get(iso);
-      return { day: String(i + 1), expense: roll?.expense ?? 0, income: roll?.income ?? 0 };
+      const expense = roll?.expense ?? 0;
+      const invested = transactions
+        .filter(
+          (tx) =>
+            tx.date === iso &&
+            tx.type === "expense" &&
+            isInvestmentCategory(tx.categoryId),
+        )
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      return {
+        day: String(i + 1),
+        spend: Math.max(0, expense - invested),
+        invest: invested,
+      };
     });
-  }, [dim, start, summary.byDay]);
+  }, [dim, start, summary.byDay, transactions]);
 
   const cats = useMemo(() => {
     return [...summary.byCategory.entries()]
@@ -70,7 +95,7 @@ export function InsightsView({
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   }, [categoryId, month, transactions]);
   const categoryTotal = categoryRows.reduce((sum, tx) => sum + tx.amount, 0);
-  const categoryLabel = categoryId ? categoryById(categoryId).label : "";
+  const categoryLabel = categoryId ? categoryById(categoryId, custom).label : "";
   const rate =
     summary.income > 0
       ? Math.round(((summary.income - summary.expense) / summary.income) * 100)
@@ -81,22 +106,38 @@ export function InsightsView({
 
   return (
     <div className="flex flex-col gap-6 px-5 pt-2 pb-8">
-      <header>
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-subtle">
-          Insights
-        </p>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-fg">
-          {monthLabel}
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          {empty
-            ? "Nothing this month yet."
-            : rate === null
-              ? "Add income to see a save rate."
-              : rate >= 0
-                ? `${rate}% of income kept`
-                : `${Math.abs(rate)}% over income`}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-subtle">
+            Insights
+          </p>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-fg">
+            {monthLabel}
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            {empty
+              ? "Nothing this month yet."
+              : rate === null
+                ? "Add income to see a save rate."
+                : rate >= 0
+                  ? `${rate}% of income kept`
+                  : `${Math.abs(rate)}% over income`}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 pt-1">
+          <Button variant="ghost" size="icon" aria-label="Previous month" onClick={onPrevMonth}>
+            <ChevronLeft className="size-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Next month"
+            disabled={!canGoForward}
+            onClick={onNextMonth}
+          >
+            <ChevronRight className="size-5" />
+          </Button>
+        </div>
       </header>
 
       {empty ? (
@@ -145,8 +186,16 @@ export function InsightsView({
                       }}
                     />
                     <Bar
-                      dataKey="expense"
+                      dataKey="spend"
+                      name="Spend"
                       fill="var(--color-expense)"
+                      radius={[3, 3, 0, 0]}
+                      isAnimationActive={false}
+                    />
+                    <Bar
+                      dataKey="invest"
+                      name="Invested"
+                      fill="var(--color-invest)"
                       radius={[3, 3, 0, 0]}
                       isAnimationActive={false}
                     />
@@ -173,6 +222,7 @@ export function InsightsView({
                     total={summary.expense}
                     money={money}
                     onOpen={() => setCategoryId(row.id)}
+                    custom={custom}
                   />
                 ))}
               </ul>
@@ -275,6 +325,7 @@ function CategoryBar({
   total,
   money,
   onOpen,
+  custom,
 }: {
   id: CategoryId;
   amount: number;
@@ -282,8 +333,10 @@ function CategoryBar({
   total: number;
   money: (n: number) => string;
   onOpen: () => void;
+  custom: { id: string; label: string; type: "expense" | "income" }[];
 }) {
-  const cat = categoryById(id);
+  const cat = categoryById(id, custom);
+  const invest = isInvestmentCategory(id);
   const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
   const width = max > 0 ? Math.max((amount / max) * 100, 4) : 0;
   return (
@@ -299,13 +352,16 @@ function CategoryBar({
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
             <span className="truncate text-sm text-fg">{cat.label}</span>
-            <span className="shrink-0 text-xs tabular-nums text-muted">
+            <span className={cn("shrink-0 text-xs tabular-nums", invest ? "text-invest" : "text-muted")}>
               {money(amount)} · {pct}%
             </span>
           </span>
           <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-raised">
             <span
-              className="block h-full rounded-full bg-expense/80 transition-[width] duration-200 ease-out"
+              className={cn(
+                "block h-full rounded-full transition-[width] duration-200 ease-out",
+                invest ? "bg-invest" : "bg-expense/80",
+              )}
               style={{ width: `${width}%` }}
             />
           </span>

@@ -1,6 +1,6 @@
 import { parseLedgerJson, toSnapshot } from "@/lib/ledger/repository";
 import type { AutoPay } from "@/lib/finance/autopay";
-import type { Transaction } from "@/lib/finance/types";
+import type { CustomCategory, Transaction } from "@/lib/finance/types";
 import type { LedgerSnapshot, Profile } from "@/lib/ledger/types";
 
 export const TRANSFER_KIND = "paperwork.ledger.export";
@@ -16,6 +16,7 @@ export function buildExport(input: {
   profile: Profile;
   transactions: Transaction[];
   autoPays: AutoPay[];
+  categories?: CustomCategory[];
 }): string {
   const body: LedgerExportFile = {
     kind: TRANSFER_KIND,

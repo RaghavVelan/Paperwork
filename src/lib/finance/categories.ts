@@ -1,7 +1,9 @@
-import type { CategoryId, PaymentMethod, TxType } from "./types";
+import type { CustomCategory, PaymentMethod, TxType } from "./types";
+
+export const INVESTMENT_CATEGORY_ID = "investments";
 
 export type CategoryDef = {
-  id: CategoryId;
+  id: string;
   label: string;
   type: TxType;
 };
@@ -19,6 +21,7 @@ export const CATEGORIES: CategoryDef[] = [
   { id: "education", label: "Education", type: "expense" },
   { id: "family", label: "Family", type: "expense" },
   { id: "travel", label: "Travel", type: "expense" },
+  { id: INVESTMENT_CATEGORY_ID, label: "Investments", type: "expense" },
   { id: "other-out", label: "Other", type: "expense" },
   { id: "salary", label: "Salary", type: "income" },
   { id: "freelance", label: "Freelance", type: "income" },
@@ -35,18 +38,29 @@ export const PAYMENTS: { id: PaymentMethod; label: string }[] = [
   { id: "wallet", label: "Wallet" },
 ];
 
-const byId = new Map(CATEGORIES.map((c) => [c.id, c]));
+const builtinById = new Map(CATEGORIES.map((c) => [c.id, c]));
 
-export function categoryById(id: CategoryId): CategoryDef {
-  return byId.get(id) ?? CATEGORIES[0]!;
+export function categoryById(id: string, custom: CustomCategory[] = []): CategoryDef {
+  return (
+    builtinById.get(id) ??
+    custom.find((c) => c.id === id) ?? { id, label: "Unknown", type: "expense" }
+  );
 }
 
-export function categoriesFor(type: TxType): CategoryDef[] {
-  return CATEGORIES.filter((c) => c.type === type);
+export function categoriesFor(type: TxType, custom: CustomCategory[] = []): CategoryDef[] {
+  const extra = custom.filter((c) => c.type === type);
+  const built = CATEGORIES.filter((c) => c.type === type);
+  const rest = built.filter((c) => c.id !== "other-out" && c.id !== "other-in");
+  const other = built.filter((c) => c.id === "other-out" || c.id === "other-in");
+  return [...rest, ...extra, ...other];
 }
 
-export function defaultCategory(type: TxType): CategoryId {
+export function defaultCategory(type: TxType): string {
   return type === "income" ? "salary" : "food";
+}
+
+export function isInvestmentCategory(id: string): boolean {
+  return id === INVESTMENT_CATEGORY_ID;
 }
 
 export function paymentLabel(id: PaymentMethod): string {

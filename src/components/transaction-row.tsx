@@ -1,4 +1,5 @@
-import { categoryById, paymentLabel } from "@/lib/finance/categories";
+import { categoryById, isInvestmentCategory, paymentLabel } from "@/lib/finance/categories";
+import { useFinanceStore } from "@/lib/finance/store";
 import type { Transaction } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { CategoryIcon } from "./category-icon";
@@ -11,8 +12,9 @@ export function TransactionRow({
   onOpen: (id: string) => void;
 }) {
   const { format: money } = useSettings();
-  const cat = categoryById(tx.categoryId);
-  const negative = tx.type === "expense";
+  const custom = useFinanceStore((s) => s.categories);
+  const cat = categoryById(tx.categoryId, custom);
+  const invest = tx.type === "expense" && isInvestmentCategory(tx.categoryId);
 
   return (
     <button
@@ -34,12 +36,14 @@ export function TransactionRow({
       </span>
       <span
         className={
-          negative
-            ? "shrink-0 font-medium tabular-nums text-expense"
-            : "shrink-0 font-medium tabular-nums text-income"
+          tx.type === "income"
+            ? "shrink-0 font-medium tabular-nums text-income"
+            : invest
+              ? "shrink-0 font-medium tabular-nums text-invest"
+              : "shrink-0 font-medium tabular-nums text-expense"
         }
       >
-        {negative ? "−" : "+"}
+        {tx.type === "expense" ? "−" : "+"}
         {money(tx.amount)}
       </span>
     </button>

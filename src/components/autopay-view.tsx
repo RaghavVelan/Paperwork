@@ -5,6 +5,7 @@ import { AutoPaySheet } from "@/components/autopay-sheet";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { isInvestmentCategory } from "@/lib/finance/categories";
 import { kindLabel, monthAutoPays, type AutoPay } from "@/lib/finance/autopay";
 import { useFinanceStore } from "@/lib/finance/store";
 import { useSettings } from "@/lib/ledger/use-settings";
@@ -108,6 +109,7 @@ export function AutoPayView() {
                       amount={money(ap.amount)}
                       meta={`${when}${row ? ` · ${day}` : until}`}
                       status={row?.status}
+                      invest={isInvestmentCategory(ap.categoryId)}
                       onClick={() => openEdit(ap)}
                     />
                   );
@@ -128,6 +130,7 @@ export function AutoPayView() {
                     amount={money(ap.amount)}
                     meta={`Ended ${format(parseISODate(ap.endDate!), "d MMM yyyy")}`}
                     muted
+                    invest={isInvestmentCategory(ap.categoryId)}
                     onClick={() => openEdit(ap)}
                   />
                 ))}
@@ -148,6 +151,7 @@ function AutoPayRow({
   amount,
   meta,
   status,
+  invest,
   muted,
   onClick,
 }: {
@@ -156,6 +160,7 @@ function AutoPayRow({
   amount: string;
   meta: string;
   status?: "posted" | "due" | "upcoming";
+  invest?: boolean;
   muted?: boolean;
   onClick: () => void;
 }) {
@@ -180,7 +185,7 @@ function AutoPayRow({
           </span>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="text-sm font-medium tabular-nums text-expense">−{amount}</span>
+          <span className={cn("text-sm font-medium tabular-nums", invest ? "text-invest" : "text-expense")}>−{amount}</span>
           {status ? (
             <Badge variant={status === "posted" ? "default" : status === "due" ? "expense" : "accent"}>
               {statusLabel(status)}

@@ -1,5 +1,5 @@
 import { coerceAutoPay, type AutoPay } from "@/lib/finance/autopay";
-import type { Transaction } from "@/lib/finance/types";
+import type { CustomCategory, Transaction } from "@/lib/finance/types";
 import { isThemeMode } from "@/lib/theme";
 import { isCurrencyCode } from "./currencies";
 import { isBackupWeekday } from "./backup";
@@ -82,6 +82,24 @@ function coerceProfile(raw: unknown): Profile {
   };
 }
 
+function coerceCategories(raw: unknown): CustomCategory[] {
+  if (!Array.isArray(raw)) return [];
+  const out: CustomCategory[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const c = item as CustomCategory;
+    const id = typeof c.id === "string" ? c.id.trim() : "";
+    const label = typeof c.label === "string" ? c.label.trim().replace(/\s+/g, " ").slice(0, 24) : "";
+    if (!id || id.length > 80 || !label) continue;
+    if (c.type !== "expense" && c.type !== "income") continue;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, label, type: c.type });
+  }
+  return out;
+}
+
 function isTx(value: unknown): value is Transaction {
   if (!value || typeof value !== "object") return false;
   const t = value as Transaction;
@@ -106,6 +124,7 @@ function coerceSnapshot(root: Record<string, unknown>): LedgerSnapshot | null {
       autoPayId: typeof t.autoPayId === "string" ? t.autoPayId : undefined,
     })),
     autoPays,
+    categories: coerceCategories(root.categories),
     updatedAt: typeof root.updatedAt === "string" ? root.updatedAt : new Date().toISOString(),
   };
 }
@@ -150,6 +169,7 @@ export class LocalLedgerRepository implements LedgerRepository {
       profile: coerceProfile(snapshot.profile),
       transactions: snapshot.transactions.filter(isTx),
       autoPays: snapshot.autoPays ?? [],
+      categories: coerceCategories(snapshot.categories),
       updatedAt: snapshot.updatedAt || new Date().toISOString(),
     };
     this.store.setItem(LEDGER_KEY, JSON.stringify(body));
@@ -168,12 +188,14 @@ export function toSnapshot(input: {
   profile: Profile;
   transactions: Transaction[];
   autoPays: AutoPay[];
+  categories?: CustomCategory[];
 }): LedgerSnapshot {
   return {
     version: 1,
     profile: input.profile,
     transactions: input.transactions,
     autoPays: input.autoPays,
+    categories: input.categories ?? [],
     updatedAt: new Date().toISOString(),
   };
 }

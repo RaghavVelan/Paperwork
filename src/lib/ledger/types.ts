@@ -1,5 +1,5 @@
 import type { AutoPay } from "@/lib/finance/autopay";
-import type { Transaction } from "@/lib/finance/types";
+import type { CustomCategory, Transaction } from "@/lib/finance/types";
 import type { ThemeMode } from "@/lib/theme";
 
 export type CurrencyCode =
@@ -40,6 +40,8 @@ export type LedgerSnapshot = {
   profile: Profile;
   transactions: Transaction[];
   autoPays: AutoPay[];
+  /** User-made categories. Missing on older ledgers. */
+  categories: CustomCategory[];
   updatedAt: string;
 };
 

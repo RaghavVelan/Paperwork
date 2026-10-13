@@ -44,7 +44,7 @@ export function kindDefaults(kind: AutoPayKind): {
     case "upi_mandate":
       return { categoryId: "utilities", payment: "upi" };
     case "mutual_fund":
-      return { categoryId: "other-out", payment: "netbanking" };
+      return { categoryId: "investments", payment: "netbanking" };
     case "loan":
       return { categoryId: "other-out", payment: "netbanking" };
     case "subscription":

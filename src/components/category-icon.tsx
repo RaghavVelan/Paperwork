@@ -9,19 +9,20 @@ import {
   HeartPulse,
   Home,
   MoreHorizontal,
+  PiggyBank,
   Plane,
   ShoppingBag,
   ShoppingBasket,
+  Tag,
   TrendingUp,
   Users,
   Utensils,
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { CategoryId } from "@/lib/finance/types";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<CategoryId, LucideIcon> = {
+const ICONS: Record<string, LucideIcon> = {
   food: Utensils,
   groceries: ShoppingBasket,
   transport: Bus,
@@ -34,6 +35,7 @@ const ICONS: Record<CategoryId, LucideIcon> = {
   education: GraduationCap,
   family: Users,
   travel: Plane,
+  investments: PiggyBank,
   "other-out": MoreHorizontal,
   salary: Banknote,
   freelance: Briefcase,
@@ -46,9 +48,9 @@ export function CategoryIcon({
   id,
   className,
 }: {
-  id: CategoryId;
+  id: string;
   className?: string;
 }) {
-  const Icon = ICONS[id] ?? MoreHorizontal;
+  const Icon = ICONS[id] ?? Tag;
   return <Icon className={cn("size-4", className)} strokeWidth={1.75} />;
 }

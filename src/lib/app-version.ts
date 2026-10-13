@@ -1,10 +1,19 @@
-export const APP_VERSION = "1.5.0";
+export const APP_VERSION = "1.6.0";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.6.0",
+    date: "12 Oct 2026",
+    items: [
+      "Make your own expense and income categories. Auto pays use them too.",
+      "Investments is a built-in category, shown in yellow instead of red.",
+      "Insights can move to earlier months.",
+    ],
+  },
   {
     version: "1.5.0",
     date: "8 Oct 2026",

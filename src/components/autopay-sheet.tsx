@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CategoryIcon } from "@/components/category-icon";
+import { CategoryPicker } from "@/components/category-picker";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -19,7 +19,7 @@ import {
   type AutoPay,
   type AutoPayKind,
 } from "@/lib/finance/autopay";
-import { categoriesFor, PAYMENTS } from "@/lib/finance/categories";
+import { PAYMENTS } from "@/lib/finance/categories";
 import { useFinanceStore } from "@/lib/finance/store";
 import { useSheetStore } from "@/lib/finance/sheet";
 import type { CategoryId, PaymentMethod } from "@/lib/finance/types";
@@ -78,7 +78,6 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
     }
   }, [open, editing, todayIso]);
 
-  const cats = useMemo(() => categoriesFor("expense"), []);
   const parsed = parseAmountInput(amount);
 
   function onKindChange(next: AutoPayKind) {
@@ -186,25 +185,7 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
           </div>
 
           <Label>Category</Label>
-          <div className="mt-1.5 mb-5 grid grid-cols-4 gap-2">
-            {cats.map((c) => {
-              const active = categoryId === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setCategoryId(c.id)}
-                  className={cn(
-                    "flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-center",
-                    active ? "bg-accent text-accent-fg" : "bg-raised text-muted shadow-card",
-                  )}
-                >
-                  <CategoryIcon id={c.id} className="size-4" />
-                  <span className="line-clamp-1 text-2xs font-medium leading-tight">{c.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} />
 
           <div className="mb-5 grid grid-cols-2 gap-3">
             <div>

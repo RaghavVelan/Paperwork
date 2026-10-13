@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
+import { isInvestmentCategory } from "@/lib/finance/categories";
 import { kindLabel, type MonthAutoPay } from "@/lib/finance/autopay";
 import { useFinanceStore } from "@/lib/finance/store";
 import type { DayRollup, MonthSummary } from "@/lib/finance/selectors";
@@ -231,7 +232,12 @@ export function HomeView({
                     {kindLabel(row.autoPay.kind)} · {format(parseISODate(row.date), "d MMM")}
                   </span>
                 </span>
-                <span className="shrink-0 text-sm tabular-nums text-expense">
+                <span
+                  className={cn(
+                    "shrink-0 text-sm tabular-nums",
+                    isInvestmentCategory(row.autoPay.categoryId) ? "text-invest" : "text-expense",
+                  )}
+                >
                   −{money(row.autoPay.amount)}
                 </span>
                 <Badge

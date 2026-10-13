@@ -2,25 +2,13 @@ export type TxType = "expense" | "income";
 
 export type PaymentMethod = "upi" | "cash" | "card" | "netbanking" | "wallet";
 
-export type CategoryId =
-  | "food"
-  | "groceries"
-  | "transport"
-  | "fuel"
-  | "rent"
-  | "utilities"
-  | "shopping"
-  | "entertainment"
-  | "health"
-  | "education"
-  | "family"
-  | "travel"
-  | "other-out"
-  | "salary"
-  | "freelance"
-  | "investment"
-  | "gift"
-  | "other-in";
+export type CategoryId = string;
+
+export type CustomCategory = {
+  id: string;
+  label: string;
+  type: TxType;
+};
 
 export type Transaction = {
   id: string;

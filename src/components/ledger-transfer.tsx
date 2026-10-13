@@ -16,13 +16,14 @@ export function LedgerTransfer() {
   const profile = useFinanceStore((s) => s.profile);
   const transactions = useFinanceStore((s) => s.transactions);
   const autoPays = useFinanceStore((s) => s.autoPays);
+  const categories = useFinanceStore((s) => s.categories);
   const replaceLedger = useFinanceStore((s) => s.replaceLedger);
   const { downloadBackup } = useLedgerBackup();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<LedgerSnapshot | null>(null);
 
   async function copyFile() {
-    const body = buildExport({ profile, transactions, autoPays });
+    const body = buildExport({ profile, transactions, autoPays, categories });
     try {
       await navigator.clipboard.writeText(body);
       toast.success("Copied. Paste into a file on the other device if you like.");
