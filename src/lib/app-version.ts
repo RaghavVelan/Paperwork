@@ -1,10 +1,17 @@
-export const APP_VERSION = "1.6.0";
+export const APP_VERSION = "1.6.1";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.6.1",
+    date: "13 Oct 2026",
+    items: [
+      "About and the backup guide open again from Profile.",
+    ],
+  },
   {
     version: "1.6.0",
     date: "12 Oct 2026",

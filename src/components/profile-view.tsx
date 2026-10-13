@@ -12,6 +12,7 @@ import { WEEKDAYS } from "@/lib/ledger/backup";
 import type { CurrencyCode, Profile } from "@/lib/ledger/types";
 import { useFinanceStore } from "@/lib/finance/store";
 import { formatMoney, groupDigits, parseAmountInput } from "@/lib/money";
+import { skipNextSheetBack } from "@/lib/sheet-history";
 
 type Props = {
   onOpenPrivacy?: () => void;
@@ -53,9 +54,10 @@ export function ProfileView({ onOpenPrivacy, onNavigate }: Props) {
     });
   }
 
-  function go(href: string) {
+  function go(href: "/about" | "/guide" | "/privacy") {
+    skipNextSheetBack();
     onNavigate?.();
-    void router.navigate({ to: href });
+    void router.navigate({ to: href, replace: true });
   }
 
   return (
