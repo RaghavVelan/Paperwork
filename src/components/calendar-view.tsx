@@ -1,8 +1,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList } from "@/components/grouped-list";
+import { YearView } from "@/components/year-insights";
 import type { DayRollup } from "@/lib/finance/selectors";
 import { transactionsOnDate } from "@/lib/finance/selectors";
 import type { Transaction } from "@/lib/finance/types";
@@ -38,7 +40,9 @@ export function CalendarView({
   onAdd: (date: string) => void;
 }) {
   const { formatCompact, todayIso } = useSettings();
+  const [span, setSpan] = useState<"month" | "year">("month");
   const monthStart = startOfMonth(cursor);
+  const year = monthStart.getFullYear();
   const leading = monthStart.getDay();
   const count = daysInMonth(monthStart);
   const cells: (number | null)[] = [
@@ -52,6 +56,30 @@ export function CalendarView({
   const selectedRoll = byDay.get(selectedDate);
   const selectedLabel = format(parseISODate(selectedDate), "EEEE, d MMMM");
   const emptyMonth = [...byDay.values()].every((d) => d.expense === 0 && d.income === 0);
+  const currentMonth = todayIso.slice(0, 7);
+  const currentYear = Number(todayIso.slice(0, 4));
+
+  if (span === "year") {
+    return (
+      <YearView
+        eyebrow="Calendar"
+        year={String(year)}
+        transactions={transactions}
+        canGoForward={year < currentYear}
+        onPrev={() => onCursorChange(new Date(year - 1, monthStart.getMonth(), 1))}
+        onNext={() => {
+          if (year < currentYear) onCursorChange(new Date(year + 1, monthStart.getMonth(), 1));
+        }}
+        onShowMonth={() => setSpan("month")}
+        onOpenMonth={(month) => {
+          if (month > currentMonth) return;
+          onCursorChange(parseISODate(`${month}-01`));
+          setSpan("month");
+        }}
+        currentMonth={currentMonth}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 px-5 pt-2 pb-8">
@@ -65,6 +93,9 @@ export function CalendarView({
           </h1>
         </div>
         <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setSpan("year")}>
+            Year
+          </Button>
           <Button
             variant="ghost"
             size="icon"

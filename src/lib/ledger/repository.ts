@@ -79,7 +79,19 @@ function coerceProfile(raw: unknown): Profile {
         ? p.backupSnoozedOn
         : undefined,
     hideBalance: p.hideBalance !== false,
+    categoryBudgets: coerceBudgets(p.categoryBudgets),
   };
+}
+
+function coerceBudgets(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== "object") return {};
+  const out: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (!key || key.length > 80) continue;
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) continue;
+    out[key] = Math.round(value);
+  }
+  return out;
 }
 
 function coerceCategories(raw: unknown): CustomCategory[] {

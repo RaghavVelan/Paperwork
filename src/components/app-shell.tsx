@@ -1,15 +1,16 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
 import { Toaster } from "sonner";
 import { AppLink } from "@/components/app-link";
 import { BackupBanner } from "@/components/backup-banner";
-import { BrandWordmark } from "@/components/brand-mark";
+import { BrandMark, BrandWordmark } from "@/components/brand-mark";
 import { NAV_ITEMS } from "@/components/nav-items";
 import { Onboarding } from "@/components/onboarding";
 import { AvatarMark, ProfileAvatar } from "@/components/profile-avatar";
 import { ProfileSheet } from "@/components/profile-sheet";
+import { SearchSheet } from "@/components/search-sheet";
 import { ThemeController, useResolvedTheme } from "@/components/theme-controller";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TransactionSheet } from "@/components/transaction-sheet";
@@ -35,6 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const transactions = useFinanceStore((s) => s.transactions);
   const displayName = useFinanceStore((s) => s.profile.displayName);
   const { todayIso } = useSettings();
+  const [searchOpen, setSearchOpen] = useState(false);
   const toastTheme = useResolvedTheme();
   const editing = editingId
     ? (transactions.find((t) => t.id === editingId) ?? null)
@@ -134,22 +136,32 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-bg/85 px-4 py-3 backdrop-blur-md">
-            <AppLink href="/" className="lg:hidden">
-              <BrandWordmark markSize={28} />
+          <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-bg/85 px-4 py-2.5 backdrop-blur-md">
+            <AppLink href="/" className="shrink-0 lg:hidden" ariaLabel="Paperwork">
+              <BrandMark size={32} />
             </AppLink>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9"
+                aria-label="Search"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="size-4" />
+              </Button>
               <ThemeToggle />
               <Button
                 type="button"
                 size="sm"
-                className="rounded-full pr-3.5 pl-3 lg:hidden"
+                className="h-9 rounded-full pr-3 pl-2.5 lg:hidden"
                 onClick={() => openNew()}
               >
                 <Plus className="size-4" />
                 Add
               </Button>
-              <ProfileAvatar active={profileActive} />
+              <ProfileAvatar size="sm" active={profileActive} />
             </div>
           </header>
 
@@ -202,6 +214,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           editing={editing}
           defaultDate={draftDate || todayIso}
         />
+        <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
         <ProfileSheet />
       </div>
     </MotionConfig>

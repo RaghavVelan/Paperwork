@@ -1,10 +1,23 @@
-export const APP_VERSION = "1.6.1";
+export const APP_VERSION = "1.7.0";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.7.0",
+    date: "22 Oct 2026",
+    items: [
+      "Search notes, categories, and amounts.",
+      "Rename or remove a category you created. Removed entries move to Other.",
+      "Auto pays can be weekly, yearly, or a salary coming in.",
+      "Optional category caps, a year view on Insights, and a CSV download.",
+      "Calendar has a year view, same as Insights.",
+      "Search field and the expense switch stay inside their frames.",
+      "The backup guide explains CSV as well as JSON.",
+    ],
+  },
   {
     version: "1.6.1",
     date: "13 Oct 2026",

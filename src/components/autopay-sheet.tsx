@@ -17,15 +17,32 @@ import {
   AUTO_PAY_KINDS,
   kindDefaults,
   type AutoPay,
+  type AutoPayFrequency,
   type AutoPayKind,
 } from "@/lib/finance/autopay";
 import { PAYMENTS } from "@/lib/finance/categories";
 import { useFinanceStore } from "@/lib/finance/store";
 import { useSheetStore } from "@/lib/finance/sheet";
 import type { CategoryId, PaymentMethod } from "@/lib/finance/types";
+import { WEEKDAYS } from "@/lib/ledger/backup";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { groupDigits, parseAmountInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 type Props = {
   open: boolean;
@@ -41,11 +58,14 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
   const { format: money, symbol, currency, todayIso } = useSettings();
 
   const [kind, setKind] = useState<AutoPayKind>("upi_mandate");
+  const [frequency, setFrequency] = useState<AutoPayFrequency>("monthly");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState<CategoryId>("utilities");
   const [payment, setPayment] = useState<PaymentMethod>("upi");
   const [dayOfMonth, setDayOfMonth] = useState(5);
+  const [weekday, setWeekday] = useState(1);
+  const [monthOfYear, setMonthOfYear] = useState(1);
   const [startDate, setStartDate] = useState(todayIso);
   const [endDate, setEndDate] = useState("");
 
@@ -58,21 +78,27 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
     if (!open) return;
     if (editing) {
       setKind(editing.kind);
+      setFrequency(editing.frequency);
       setName(editing.name);
       setAmount(String(editing.amount));
       setCategoryId(editing.categoryId);
       setPayment(editing.payment);
       setDayOfMonth(editing.dayOfMonth);
+      setWeekday(editing.weekday);
+      setMonthOfYear(editing.monthOfYear);
       setStartDate(editing.startDate);
       setEndDate(editing.endDate ?? "");
     } else {
       const defaults = kindDefaults("upi_mandate");
       setKind("upi_mandate");
+      setFrequency("monthly");
       setName("");
       setAmount("");
       setCategoryId(defaults.categoryId);
       setPayment(defaults.payment);
       setDayOfMonth(5);
+      setWeekday(1);
+      setMonthOfYear(Number(todayIso.slice(5, 7)) || 1);
       setStartDate(todayIso);
       setEndDate("");
     }
@@ -104,10 +130,14 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
     const draft = {
       name: name.trim(),
       kind,
+      type: kindDefaults(kind).type,
       amount: value,
       categoryId,
       payment,
+      frequency,
       dayOfMonth,
+      weekday,
+      monthOfYear,
       startDate,
       endDate: endDate || null,
     };
@@ -184,34 +214,117 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
             />
           </div>
 
+          <Label>How often</Label>
+          <div className="mt-1.5 mb-5 flex gap-2">
+            {(
+              [
+                ["monthly", "Monthly"],
+                ["weekly", "Weekly"],
+                ["yearly", "Yearly"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFrequency(id)}
+                className={cn(
+                  "h-9 rounded-full px-3.5 text-xs font-medium",
+                  frequency === id ? "bg-accent text-accent-fg" : "bg-raised text-muted shadow-card",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <Label>Category</Label>
-          <CategoryPicker type="expense" value={categoryId} onChange={setCategoryId} />
+          <CategoryPicker type={kindDefaults(kind).type} value={categoryId} onChange={setCategoryId} />
 
           <div className="mb-5 grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="ap-day">Debit day</Label>
-              <Select
-                id="ap-day"
-                className="mt-1.5"
-                value={dayOfMonth === 31 ? "last" : String(dayOfMonth)}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setDayOfMonth(v === "last" ? 31 : Number(v));
-                }}
-              >
-                {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-                <option value="last">Last day of month</option>
-              </Select>
-              <p className="mt-1.5 text-xs text-subtle">Short months use the last day.</p>
+              {frequency === "weekly" ? (
+                <>
+                  <Label htmlFor="ap-weekday">Weekday</Label>
+                  <Select
+                    id="ap-weekday"
+                    className="mt-1.5"
+                    value={String(weekday)}
+                    onChange={(e) => setWeekday(Number(e.target.value))}
+                  >
+                    {WEEKDAYS.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </Select>
+                </>
+              ) : (
+                <>
+                  <Label htmlFor="ap-day">{frequency === "yearly" ? "Day" : "Debit day"}</Label>
+                  <Select
+                    id="ap-day"
+                    className="mt-1.5"
+                    value={dayOfMonth === 31 ? "last" : String(dayOfMonth)}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDayOfMonth(v === "last" ? 31 : Number(v));
+                    }}
+                  >
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                    <option value="last">Last day of month</option>
+                  </Select>
+                  {frequency === "monthly" ? (
+                    <p className="mt-1.5 text-xs text-subtle">Short months use the last day.</p>
+                  ) : null}
+                </>
+              )}
             </div>
             <div>
-              <Label htmlFor="ap-pay">Paid with</Label>
+              {frequency === "yearly" ? (
+                <>
+                  <Label htmlFor="ap-month">Month</Label>
+                  <Select
+                    id="ap-month"
+                    className="mt-1.5"
+                    value={String(monthOfYear)}
+                    onChange={(e) => setMonthOfYear(Number(e.target.value))}
+                  >
+                    {MONTHS.map((label, index) => (
+                      <option key={label} value={index + 1}>
+                        {label}
+                      </option>
+                    ))}
+                  </Select>
+                </>
+              ) : (
+                <>
+                  <Label htmlFor="ap-pay">Paid with</Label>
+                  <Select
+                    id="ap-pay"
+                    className="mt-1.5"
+                    value={payment}
+                    onChange={(e) => setPayment(e.target.value as PaymentMethod)}
+                  >
+                    {PAYMENTS.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </Select>
+                </>
+              )}
+            </div>
+          </div>
+
+          {frequency === "yearly" ? (
+            <div className="mb-5">
+              <Label htmlFor="ap-pay-year">Paid with</Label>
               <Select
-                id="ap-pay"
+                id="ap-pay-year"
                 className="mt-1.5"
                 value={payment}
                 onChange={(e) => setPayment(e.target.value as PaymentMethod)}
@@ -223,7 +336,7 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
                 ))}
               </Select>
             </div>
-          </div>
+          ) : null}
 
           <div className="mb-6 grid grid-cols-2 gap-3">
             <div>
@@ -254,7 +367,7 @@ export function AutoPaySheet({ open, onOpenChange, editing }: Props) {
               {editing
                 ? "Save changes"
                 : parsed > 0
-                  ? `Add ${money(parsed)} / mo`
+                  ? `Add ${money(parsed)}${frequency === "weekly" ? " / wk" : frequency === "yearly" ? " / yr" : " / mo"}`
                   : "Add auto pay"}
             </Button>
             {editing ? (

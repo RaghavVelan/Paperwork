@@ -104,29 +104,29 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
           </DrawerDescription>
         </DrawerHeader>
         <DrawerBody>
-          <div className="relative mb-5 grid grid-cols-2 gap-1 rounded-xl bg-raised p-1">
-            <span
-              aria-hidden
-              className={cn(
-                "pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-surface shadow-card transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                type === "income" ? "translate-x-[calc(100%+4px)]" : "translate-x-0",
-              )}
-            />
+          <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-raised p-1">
             {(["expense", "income"] as const).map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => onTypeChange(t)}
-                className={cn(
-                  "relative z-10 h-10 rounded-lg text-sm font-medium capitalize",
-                  type === t
-                    ? t === "expense"
-                      ? "text-expense"
-                      : "text-income"
-                    : "text-muted",
-                )}
+                className="relative h-10 rounded-lg text-sm font-medium capitalize"
               >
-                {t}
+                {type === t ? (
+                  <motion.span
+                    layoutId="entry-type"
+                    className="absolute inset-0 rounded-lg bg-surface shadow-card"
+                    transition={transition.spring}
+                  />
+                ) : null}
+                <span
+                  className={cn(
+                    "relative z-10",
+                    type === t ? (t === "expense" ? "text-expense" : "text-income") : "text-muted",
+                  )}
+                >
+                  {t}
+                </span>
               </button>
             ))}
           </div>

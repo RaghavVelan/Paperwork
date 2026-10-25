@@ -9,9 +9,10 @@ import { zonedISODate } from "@/lib/time";
 import type { CustomCategory, Transaction } from "./types";
 
 type Draft = Omit<Transaction, "id" | "createdAt"> & { id?: string };
-type AutoPayDraft = Omit<AutoPay, "id" | "createdAt" | "postedMonths"> & {
+type AutoPayDraft = Omit<AutoPay, "id" | "createdAt" | "postedMonths" | "postedDates"> & {
   id?: string;
   postedMonths?: string[];
+  postedDates?: string[];
 };
 
 type FinanceState = {
@@ -28,6 +29,8 @@ type FinanceState = {
   materializeAutoPays: (todayIso: string) => void;
   replaceLedger: (snapshot: LedgerSnapshot) => void;
   addCategory: (label: string, type: Transaction["type"]) => CustomCategory | null;
+  renameCategory: (id: string, label: string) => boolean;
+  deleteCategory: (id: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
   completeOnboarding: (patch: Partial<Profile>) => void;
 };
@@ -67,14 +70,16 @@ function applyDue(autoPays: AutoPay[], transactions: Transaction[], todayIso: st
     if (dues.length === 0) continue;
     changed = true;
     const months = [...ap.postedMonths];
+    const postedDates = [...ap.postedDates];
     for (const date of dues) {
       const month = date.slice(0, 7);
-      if (!months.includes(month)) months.push(month);
+      if (ap.frequency === "monthly" && !months.includes(month)) months.push(month);
+      if (!postedDates.includes(date)) postedDates.push(date);
       nextTx = [
         {
           id: newId(),
           createdAt: new Date().toISOString(),
-          type: "expense" as const,
+          type: ap.type,
           amount: ap.amount,
           categoryId: ap.categoryId,
           note: ap.name,
@@ -85,7 +90,9 @@ function applyDue(autoPays: AutoPay[], transactions: Transaction[], todayIso: st
         ...nextTx,
       ];
     }
-    nextPays = nextPays.map((p) => (p.id === ap.id ? { ...p, postedMonths: months } : p));
+    nextPays = nextPays.map((p) =>
+      p.id === ap.id ? { ...p, postedMonths: months, postedDates } : p,
+    );
   }
   return { autoPays: nextPays, transactions: nextTx, changed };
 }
@@ -129,13 +136,18 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       createdAt: new Date().toISOString(),
       name: draft.name.trim(),
       kind: draft.kind,
+      type: draft.type,
       amount: draft.amount,
       categoryId: draft.categoryId,
       payment: draft.payment,
+      frequency: draft.frequency,
       dayOfMonth: draft.dayOfMonth,
+      weekday: draft.weekday,
+      monthOfYear: draft.monthOfYear,
       startDate: draft.startDate,
       endDate: draft.endDate,
       postedMonths: draft.postedMonths ?? [],
+      postedDates: draft.postedDates ?? [],
     };
     const autoPays = [item, ...get().autoPays];
     const todayIso = zonedISODate(new Date(), get().profile.timezone);
@@ -154,10 +166,14 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             ...p,
             name: draft.name.trim(),
             kind: draft.kind,
+            type: draft.type,
             amount: draft.amount,
             categoryId: draft.categoryId,
             payment: draft.payment,
+            frequency: draft.frequency,
             dayOfMonth: draft.dayOfMonth,
+            weekday: draft.weekday,
+            monthOfYear: draft.monthOfYear,
             startDate: draft.startDate,
             endDate: draft.endDate,
           }
@@ -218,6 +234,38 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       autoPays: get().autoPays,
     });
     return item;
+  },
+  renameCategory: (id, label) => {
+    const name = label.trim().replace(/\s+/g, " ").slice(0, 24);
+    const current = get().categories.find((c) => c.id === id);
+    if (!current || !name) return false;
+    const existing = categoriesFor(current.type, get().categories);
+    if (existing.some((c) => c.id !== id && c.label.toLowerCase() === name.toLowerCase())) return false;
+    const categories = get().categories.map((c) => (c.id === id ? { ...c, label: name } : c));
+    set({ categories });
+    persist({
+      profile: get().profile,
+      transactions: get().transactions,
+      autoPays: get().autoPays,
+    });
+    return true;
+  },
+  deleteCategory: (id) => {
+    const current = get().categories.find((c) => c.id === id);
+    if (!current) return;
+    const fallback = current.type === "income" ? "other-in" : "other-out";
+    const transactions = get().transactions.map((tx) =>
+      tx.categoryId === id ? { ...tx, categoryId: fallback } : tx,
+    );
+    const autoPays = get().autoPays.map((ap) =>
+      ap.categoryId === id ? { ...ap, categoryId: fallback } : ap,
+    );
+    const categories = get().categories.filter((c) => c.id !== id);
+    const categoryBudgets = { ...get().profile.categoryBudgets };
+    delete categoryBudgets[id];
+    const profile = { ...get().profile, categoryBudgets };
+    set({ transactions, autoPays, categories, profile });
+    persist({ profile, transactions, autoPays });
   },
   updateProfile: (patch) => {
     const profile = { ...get().profile, ...patch };

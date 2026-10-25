@@ -32,6 +32,8 @@ export type Profile = {
   backupSnoozedOn?: string;
   /** Hide amounts on the home balance card. Missing in older ledgers → true. */
   hideBalance: boolean;
+  /** Optional per-category monthly caps. Missing → none. */
+  categoryBudgets: Record<string, number>;
 };
 
 /** The unit we persist today and will sync after login. */
@@ -55,4 +57,5 @@ export const DEFAULT_PROFILE: Profile = {
   backupWeekday: 1,
   backupReminder: true,
   hideBalance: true,
+  categoryBudgets: {},
 };

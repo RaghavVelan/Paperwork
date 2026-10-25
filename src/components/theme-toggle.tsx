@@ -1,8 +1,7 @@
-import { Monitor, Moon, Sun } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
+import * as Popover from "@radix-ui/react-popover";
+import { Check, Monitor, Moon, Sun } from "lucide-react";
 import { useFinanceStore } from "@/lib/finance/store";
 import { applyTheme, type ThemeMode } from "@/lib/theme";
-import { transition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const OPTIONS: { id: ThemeMode; label: string; icon: typeof Sun }[] = [
@@ -14,6 +13,8 @@ const OPTIONS: { id: ThemeMode; label: string; icon: typeof Sun }[] = [
 export function ThemeToggle({ className }: { className?: string }) {
   const mode = useFinanceStore((s) => s.profile.theme);
   const updateProfile = useFinanceStore((s) => s.updateProfile);
+  const current = OPTIONS.find((opt) => opt.id === mode) ?? OPTIONS[2];
+  const CurrentIcon = current.icon;
 
   function setMode(next: ThemeMode) {
     applyTheme(next);
@@ -21,41 +22,47 @@ export function ThemeToggle({ className }: { className?: string }) {
   }
 
   return (
-    <LayoutGroup id="theme-toggle">
-      <div
-        role="radiogroup"
-        aria-label="Theme"
-        className={cn("relative flex h-9 items-center rounded-full bg-raised p-0.5 shadow-card", className)}
-      >
-        {OPTIONS.map((opt) => {
-          const active = mode === opt.id;
-          const Icon = opt.icon;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              aria-label={opt.label}
-              title={opt.label}
-              onClick={() => setMode(opt.id)}
-              className={cn(
-                "relative z-10 flex size-8 items-center justify-center rounded-full",
-                active ? "text-fg" : "text-subtle hover:text-fg",
-              )}
-            >
-              {active ? (
-                <motion.span
-                  layoutId="theme-thumb"
-                  className="absolute inset-0 rounded-full bg-surface shadow-card"
-                  transition={transition.spring}
-                />
-              ) : null}
-              <Icon className="relative z-10 size-3.5" strokeWidth={1.75} />
-            </button>
-          );
-        })}
-      </div>
-    </LayoutGroup>
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          aria-label={`Theme, ${current.label}`}
+          className={cn(
+            "flex size-9 items-center justify-center rounded-full text-fg hover:bg-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
+            className,
+          )}
+        >
+          <CurrentIcon className="size-4" strokeWidth={1.75} />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={8}
+          className="z-50 w-40 rounded-2xl bg-surface p-1 shadow-card outline-none"
+        >
+          {OPTIONS.map((opt) => {
+            const Icon = opt.icon;
+            const active = mode === opt.id;
+            return (
+              <Popover.Close asChild key={opt.id}>
+                <button
+                  type="button"
+                  onClick={() => setMode(opt.id)}
+                  className={cn(
+                    "flex h-10 w-full items-center gap-2.5 rounded-xl px-2.5 text-sm",
+                    active ? "bg-raised text-fg" : "text-muted hover:bg-raised hover:text-fg",
+                  )}
+                >
+                  <Icon className="size-4" strokeWidth={1.75} />
+                  <span className="flex-1 text-left">{opt.label}</span>
+                  {active ? <Check className="size-3.5 text-fg" /> : null}
+                </button>
+              </Popover.Close>
+            );
+          })}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

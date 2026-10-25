@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { useFinanceStore } from "@/lib/finance/store";
 import {
   buildExport,
+  downloadJson,
   readExport,
   summarizeSnapshot,
+  transactionsToCsv,
 } from "@/lib/ledger/transfer";
 import { useLedgerBackup } from "@/lib/ledger/use-backup";
 import type { LedgerSnapshot } from "@/lib/ledger/types";
@@ -18,7 +20,7 @@ export function LedgerTransfer() {
   const autoPays = useFinanceStore((s) => s.autoPays);
   const categories = useFinanceStore((s) => s.categories);
   const replaceLedger = useFinanceStore((s) => s.replaceLedger);
-  const { downloadBackup } = useLedgerBackup();
+  const { downloadBackup, todayIso } = useLedgerBackup();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<LedgerSnapshot | null>(null);
 
@@ -65,8 +67,8 @@ export function LedgerTransfer() {
     <section className="rounded-3xl bg-raised p-5">
       <h2 className="text-sm font-medium text-fg">Move to another device</h2>
       <p className="mt-1 text-sm text-muted">
-        Everything lives in this browser. Export a file here, then import it on the new phone
-        or laptop.
+        Everything lives in this browser. Export JSON to move the whole ledger. CSV is just the
+        entries, for a spreadsheet.
       </p>
 
       <input
@@ -117,6 +119,18 @@ export function LedgerTransfer() {
           </Button>
           <Button variant="ghost" className="col-span-2 h-10 rounded-xl" onClick={() => void copyFile()}>
             Copy JSON
+          </Button>
+          <Button
+            variant="ghost"
+            className="col-span-2 h-10 rounded-xl"
+            onClick={() =>
+              downloadJson(
+                `paperwork-${todayIso}.csv`,
+                transactionsToCsv(transactions, categories),
+              )
+            }
+          >
+            Download CSV
           </Button>
         </div>
       )}

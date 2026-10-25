@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { isInvestmentCategory } from "@/lib/finance/categories";
 import { kindLabel, monthAutoPays, type AutoPay } from "@/lib/finance/autopay";
 import { useFinanceStore } from "@/lib/finance/store";
+import { weekdayLabel } from "@/lib/ledger/backup";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { parseISODate } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -28,7 +29,12 @@ export function AutoPayView() {
     () => monthAutoPays(autoPays, month, todayIso),
     [autoPays, month, todayIso],
   );
-  const committed = thisMonth.reduce((n, row) => n + row.autoPay.amount, 0);
+  const committed = thisMonth
+    .filter((row) => row.autoPay.type !== "income")
+    .reduce((n, row) => n + row.autoPay.amount, 0);
+  const comingIn = thisMonth
+    .filter((row) => row.autoPay.type === "income")
+    .reduce((n, row) => n + row.autoPay.amount, 0);
 
   function openNew() {
     setEditing(null);
@@ -51,7 +57,7 @@ export function AutoPayView() {
             Auto pays
           </p>
           <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-fg">
-            Monthly
+            Recurring
           </h1>
           <p className="mt-1 text-sm text-muted">
             UPI mandates, SIPs, EMIs. Posted on the debit day.
@@ -67,7 +73,7 @@ export function AutoPayView() {
       {autoPays.length === 0 ? (
         <EmptyState
           title="No auto pays yet"
-          body="Add a UPI mandate, mutual-fund SIP, or loan. We’ll post it each month until the last date."
+          body="Add a UPI mandate, SIP, loan, or salary. Weekly, monthly, or once a year — it posts until the last date."
           action="Add auto pay"
           onAction={openNew}
         />
@@ -84,6 +90,7 @@ export function AutoPayView() {
               {thisMonth.length === 0
                 ? "Nothing scheduled this month."
                 : `${thisMonth.length} scheduled · ${thisMonth.filter((r) => r.status === "posted").length} posted`}
+              {comingIn > 0 ? ` · ${money(comingIn)} coming in` : ""}
             </p>
           </section>
 
@@ -92,22 +99,28 @@ export function AutoPayView() {
               <h2 className="mb-2 text-sm font-medium text-fg">Auto pays</h2>
               <ul className="flex flex-col gap-1">
                 {active.map((ap) => {
-                  const row = thisMonth.find((r) => r.autoPay.id === ap.id);
-                  const day =
-                    ap.dayOfMonth === 31 ? "Last day" : `Day ${ap.dayOfMonth}`;
+                  const hits = thisMonth.filter((r) => r.autoPay.id === ap.id);
+                  const row = hits[0];
+                  const cadence =
+                    ap.frequency === "weekly"
+                      ? `Every ${weekdayLabel(ap.weekday)}`
+                      : ap.frequency === "yearly"
+                        ? "Once a year"
+                        : ap.dayOfMonth === 31
+                          ? "Last day"
+                          : `Day ${ap.dayOfMonth}`;
                   const until = ap.endDate
                     ? ` · until ${format(parseISODate(ap.endDate), "d MMM yyyy")}`
                     : "";
-                  const when = row
-                    ? format(parseISODate(row.date), "d MMM")
-                    : day;
+                  const when = row ? format(parseISODate(row.date), "d MMM") : cadence;
                   return (
                     <AutoPayRow
                       key={ap.id}
                       name={ap.name}
                       kind={kindLabel(ap.kind)}
                       amount={money(ap.amount)}
-                      meta={`${when}${row ? ` · ${day}` : until}`}
+                      income={ap.type === "income"}
+                      meta={`${when}${hits.length > 1 ? ` · ${hits.length} this month` : row ? ` · ${cadence}` : until}`}
                       status={row?.status}
                       invest={isInvestmentCategory(ap.categoryId)}
                       onClick={() => openEdit(ap)}
@@ -128,6 +141,7 @@ export function AutoPayView() {
                     name={ap.name}
                     kind={kindLabel(ap.kind)}
                     amount={money(ap.amount)}
+                    income={ap.type === "income"}
                     meta={`Ended ${format(parseISODate(ap.endDate!), "d MMM yyyy")}`}
                     muted
                     invest={isInvestmentCategory(ap.categoryId)}
@@ -149,6 +163,7 @@ function AutoPayRow({
   name,
   kind,
   amount,
+  income,
   meta,
   status,
   invest,
@@ -158,6 +173,7 @@ function AutoPayRow({
   name: string;
   kind: string;
   amount: string;
+  income?: boolean;
   meta: string;
   status?: "posted" | "due" | "upcoming";
   invest?: boolean;
@@ -185,7 +201,15 @@ function AutoPayRow({
           </span>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className={cn("text-sm font-medium tabular-nums", invest ? "text-invest" : "text-expense")}>−{amount}</span>
+          <span
+            className={cn(
+              "text-sm font-medium tabular-nums",
+              income ? "text-income" : invest ? "text-invest" : "text-expense",
+            )}
+          >
+            {income ? "+" : "−"}
+            {amount}
+          </span>
           {status ? (
             <Badge variant={status === "posted" ? "default" : status === "due" ? "expense" : "accent"}>
               {statusLabel(status)}

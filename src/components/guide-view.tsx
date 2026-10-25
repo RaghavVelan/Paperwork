@@ -9,7 +9,7 @@ const BACKUP_STEPS = [
   {
     n: "2",
     title: "Download the JSON",
-    body: "Under “Move to another device”, tap Export. The file is named paperwork-YYYY-MM-DD.json and stays on this phone or laptop.",
+    body: "Under “Move to another device”, tap Export for the full ledger. The file is paperwork-YYYY-MM-DD.json. Download CSV is only the entries, for a spreadsheet — it cannot restore the ledger.",
   },
   {
     n: "3",
@@ -27,7 +27,7 @@ const RESTORE_STEPS = [
   {
     n: "2",
     title: "Import the file",
-    body: "Tap Import and pick the paperwork-….json you saved. You can also paste the JSON if you copied it.",
+    body: "Tap Import and pick the paperwork-….json you saved. CSV files are not imported. You can also paste the JSON if you copied it.",
   },
   {
     n: "3",
@@ -77,8 +77,8 @@ export function GuideView() {
           Backup and restore
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
-          The ledger lives in this browser. A weekly JSON file is how you move it — or keep a copy
-          if the phone is lost.
+          The ledger lives in this browser. Export JSON to move everything, or download CSV if you
+          only want the entries in a spreadsheet. CSV is not a backup.
         </p>
       </header>
 

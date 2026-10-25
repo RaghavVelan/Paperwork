@@ -33,6 +33,8 @@ export function InsightsView({
   canGoForward,
   onPrevMonth,
   onNextMonth,
+  onShowYear,
+  categoryBudgets,
 }: {
   monthLabel: string;
   month: string;
@@ -43,6 +45,8 @@ export function InsightsView({
   canGoForward: boolean;
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onShowYear: () => void;
+  categoryBudgets: Record<string, number>;
 }) {
   const { format: money } = useSettings();
   const transactions = useFinanceStore((s) => s.transactions);
@@ -125,6 +129,9 @@ export function InsightsView({
           </p>
         </div>
         <div className="flex items-center gap-1 pt-1">
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={onShowYear}>
+            Year
+          </Button>
           <Button variant="ghost" size="icon" aria-label="Previous month" onClick={onPrevMonth}>
             <ChevronLeft className="size-5" />
           </Button>
@@ -221,6 +228,7 @@ export function InsightsView({
                     max={cats[0]?.amount ?? 1}
                     total={summary.expense}
                     money={money}
+                    cap={categoryBudgets[row.id] ?? 0}
                     onOpen={() => setCategoryId(row.id)}
                     custom={custom}
                   />
@@ -324,6 +332,7 @@ function CategoryBar({
   max,
   total,
   money,
+  cap,
   onOpen,
   custom,
 }: {
@@ -332,6 +341,7 @@ function CategoryBar({
   max: number;
   total: number;
   money: (n: number) => string;
+  cap: number;
   onOpen: () => void;
   custom: { id: string; label: string; type: "expense" | "income" }[];
 }) {
@@ -353,7 +363,8 @@ function CategoryBar({
           <span className="flex items-baseline justify-between gap-2">
             <span className="truncate text-sm text-fg">{cat.label}</span>
             <span className={cn("shrink-0 text-xs tabular-nums", invest ? "text-invest" : "text-muted")}>
-              {money(amount)} · {pct}%
+              {money(amount)}
+              {cap > 0 ? ` / ${money(cap)}` : ""} · {pct}%
             </span>
           </span>
           <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-raised">

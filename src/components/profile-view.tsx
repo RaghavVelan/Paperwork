@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { LedgerTransfer } from "@/components/ledger-transfer";
+import { CategoryManager } from "@/components/category-manager";
 import { CURRENCIES } from "@/lib/ledger/currencies";
 import { timezoneChoices } from "@/lib/ledger/timezones";
 import { WEEKDAYS } from "@/lib/ledger/backup";
@@ -176,6 +177,8 @@ export function ProfileView({ onOpenPrivacy, onNavigate }: Props) {
       <Button className="h-11 w-full rounded-xl" onClick={saveAll}>
         Save profile
       </Button>
+
+      <CategoryManager />
 
       <LedgerTransfer />
 

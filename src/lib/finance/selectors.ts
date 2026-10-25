@@ -18,6 +18,19 @@ export type MonthSummary = {
   byCategory: Map<CategoryId, number>;
 };
 
+export function yearRollup(transactions: Transaction[], year: string) {
+  return Array.from({ length: 12 }, (_, index) => {
+    const month = `${year}-${String(index + 1).padStart(2, "0")}`;
+    const summary = summarize(transactions, month);
+    return {
+      month,
+      income: summary.income,
+      expense: summary.expense,
+      count: summary.count,
+    };
+  });
+}
+
 export function inMonth(tx: Transaction, month: string): boolean {
   return tx.date.startsWith(month);
 }

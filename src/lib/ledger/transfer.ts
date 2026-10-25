@@ -1,6 +1,7 @@
-import { parseLedgerJson, toSnapshot } from "@/lib/ledger/repository";
+import { categoryById } from "@/lib/finance/categories";
 import type { AutoPay } from "@/lib/finance/autopay";
 import type { CustomCategory, Transaction } from "@/lib/finance/types";
+import { parseLedgerJson, toSnapshot } from "@/lib/ledger/repository";
 import type { LedgerSnapshot, Profile } from "@/lib/ledger/types";
 
 export const TRANSFER_KIND = "paperwork.ledger.export";
@@ -29,6 +30,35 @@ export function buildExport(input: {
 
 export function readExport(raw: string): LedgerSnapshot | null {
   return parseLedgerJson(raw);
+}
+
+export function transactionsToCsv(
+  transactions: Transaction[],
+  categories: CustomCategory[] = [],
+): string {
+  const header = ["date", "type", "amount", "category", "note", "payment"];
+  const lines = [header.join(",")];
+  const rows = [...transactions].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+  for (const tx of rows) {
+    lines.push(
+      [
+        tx.date,
+        tx.type,
+        String(tx.amount),
+        categoryById(tx.categoryId, categories).label,
+        tx.note,
+        tx.payment,
+      ]
+        .map(csvCell)
+        .join(","),
+    );
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function csvCell(value: string): string {
+  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
 }
 
 export function exportFilename(todayIso: string): string {

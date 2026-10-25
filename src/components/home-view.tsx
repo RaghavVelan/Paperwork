@@ -223,7 +223,7 @@ export function HomeView({
           <ul className="flex flex-col gap-1 rounded-2xl bg-surface px-2 py-2 shadow-card">
             {autoPays.slice(0, 4).map((row) => (
               <li
-                key={row.autoPay.id}
+                key={`${row.autoPay.id}-${row.date}`}
                 className="flex items-center gap-3 rounded-xl px-2 py-2"
               >
                 <span className="min-w-0 flex-1">
@@ -235,10 +235,15 @@ export function HomeView({
                 <span
                   className={cn(
                     "shrink-0 text-sm tabular-nums",
-                    isInvestmentCategory(row.autoPay.categoryId) ? "text-invest" : "text-expense",
+                    row.autoPay.type === "income"
+                      ? "text-income"
+                      : isInvestmentCategory(row.autoPay.categoryId)
+                        ? "text-invest"
+                        : "text-expense",
                   )}
                 >
-                  −{money(row.autoPay.amount)}
+                  {row.autoPay.type === "income" ? "+" : "−"}
+                  {money(row.autoPay.amount)}
                 </span>
                 <Badge
                   variant={
