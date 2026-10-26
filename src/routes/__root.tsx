@@ -1,5 +1,4 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppShell } from "@/components/app-shell";
 import { PwaRegister } from "@/components/pwa-register";
@@ -56,11 +55,9 @@ export const Route = createRootRoute({
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
         <PwaRegister />
-        <AuthProvider>
-          <AppShell>
-            <Outlet />
-          </AppShell>
-        </AuthProvider>
+        <AppShell>
+          <Outlet />
+        </AppShell>
         <Scripts />
       </body>
     </html>
