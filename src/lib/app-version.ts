@@ -1,10 +1,19 @@
-export const APP_VERSION = "1.7.0";
+export const APP_VERSION = "1.8.0";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.8.0",
+    date: "30 Oct 2026",
+    items: [
+      "An expense can remember a place. Search the map, or use this phone.",
+      "Profile chooses Off, Ask each time, or Always use this phone. Older entries stay as they are.",
+      "The entry sheet stays on the bottom after the keyboard or the map closes.",
+    ],
+  },
   {
     version: "1.7.0",
     date: "22 Oct 2026",

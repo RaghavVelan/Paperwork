@@ -58,6 +58,7 @@ function fromDraft(draft: Draft): Transaction {
     date: draft.date,
     payment: draft.payment,
     autoPayId: draft.autoPayId,
+    location: draft.type === "expense" ? draft.location : undefined,
   };
 }
 
@@ -119,6 +120,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             date: draft.date,
             payment: draft.payment,
             autoPayId: t.autoPayId,
+            location: draft.type === "expense" ? draft.location : undefined,
           }
         : t,
     );

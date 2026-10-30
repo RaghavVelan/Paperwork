@@ -125,6 +125,26 @@ export function ProfileView({ onOpenPrivacy, onNavigate }: Props) {
         </div>
 
         <div>
+          <Label htmlFor="location-mode">Place on a new expense</Label>
+          <Select
+            id="location-mode"
+            className="mt-1.5"
+            value={profile.locationMode ?? "off"}
+            onChange={(e) => {
+              const locationMode = e.target.value as Profile["locationMode"];
+              save({ locationMode }, true);
+            }}
+          >
+            <option value="off">Off</option>
+            <option value="ask">Ask each time</option>
+            <option value="auto">Always use this phone</option>
+          </Select>
+          <p className="mt-1.5 text-xs text-muted">
+            You can still search a different place on that expense. Income and auto pays stay untagged. Older entries are left as they are.
+          </p>
+        </div>
+
+        <div>
           <Label htmlFor="budget">Monthly spend limit</Label>
           <Input
             id="budget"

@@ -153,3 +153,8 @@
     animation: none;
   }
 }
+
+.leaflet-container img {
+  max-width: none;
+  max-height: none;
+}

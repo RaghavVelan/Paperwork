@@ -14,6 +14,8 @@ export type CurrencyCode =
   | "JPY"
   | "MYR";
 
+export type LocationMode = "off" | "ask" | "auto";
+
 export type Profile = {
   displayName: string;
   currency: CurrencyCode;
@@ -34,6 +36,8 @@ export type Profile = {
   hideBalance: boolean;
   /** Optional per-category monthly caps. Missing → none. */
   categoryBudgets: Record<string, number>;
+  /** Where a new expense should look for a place. Missing → off. */
+  locationMode: LocationMode;
 };
 
 /** The unit we persist today and will sync after login. */
@@ -58,4 +62,5 @@ export const DEFAULT_PROFILE: Profile = {
   backupReminder: true,
   hideBalance: true,
   categoryBudgets: {},
+  locationMode: "off",
 };

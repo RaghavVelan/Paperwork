@@ -1,4 +1,4 @@
-export const PRIVACY_UPDATED = "30 September 2026";
+export const PRIVACY_UPDATED = "26 October 2026";
 export const PRIVACY_CONTACT = "vraghav950@gmail.com";
 
 export const PRIVACY_SECTIONS: { heading: string; body: string }[] = [
@@ -12,11 +12,15 @@ export const PRIVACY_SECTIONS: { heading: string; body: string }[] = [
   },
   {
     heading: "What stays on this device",
-    body: "Your name, timezone, currency, budget, theme, entries, and auto pays are saved in this browser’s storage on this device. That ledger is not uploaded to a Paperwork server.",
+    body: "Your name, timezone, currency, budget, theme, entries, auto pays, and any place you attach to an expense are saved in this browser’s storage on this device. That ledger is not uploaded to a Paperwork server.",
   },
   {
     heading: "What we don’t collect",
     body: "We don’t ask you to sign in. We don’t run ads. We don’t send your spending to an analytics product. Currency is only a symbol — amounts are not converted or sent anywhere for rates.",
+  },
+  {
+    heading: "Place on an expense",
+    body: "Adding a place is optional. The pin and its name stay in the ledger on this device, and in any file you export. Opening the map or searching sends that search, or the pin, to OpenStreetMap and Photon so they can draw the map and suggest a name. Paperwork does not receive it. The phone asks before sharing where it is. Income and auto pays are not tagged.",
   },
   {
     heading: "Moving to another device",

@@ -77,8 +77,8 @@ export function GuideView() {
           Backup and restore
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
-          The ledger lives in this browser. Export JSON to move everything, or download CSV if you
-          only want the entries in a spreadsheet. CSV is not a backup.
+          The ledger lives in this browser. Export JSON to move everything, including a place on an
+          expense. Download CSV if you only want the entries in a spreadsheet. CSV is not a backup.
         </p>
       </header>
 

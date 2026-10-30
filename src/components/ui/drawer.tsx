@@ -16,7 +16,7 @@ function useSheetHistory(open: boolean, onClose: () => void) {
 
 export function Drawer({
   shouldScaleBackground = false,
-  repositionInputs = true,
+  repositionInputs = false,
   open,
   onOpenChange,
   ...props

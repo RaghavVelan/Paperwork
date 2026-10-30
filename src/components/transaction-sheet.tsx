@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CategoryPicker } from "@/components/category-picker";
+import { LocationSheet } from "@/components/location-sheet";
 import {
   defaultCategory,
   PAYMENTS,
 } from "@/lib/finance/categories";
+import { locationTitle, readCurrentPosition, reversePlace } from "@/lib/finance/places";
 import { useFinanceStore } from "@/lib/finance/store";
-import type { CategoryId, PaymentMethod, Transaction, TxType } from "@/lib/finance/types";
+import type { CategoryId, PaymentMethod, Transaction, TxLocation, TxType } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { tapScale, transition } from "@/lib/motion";
 import { groupDigits, parseAmountInput } from "@/lib/money";
@@ -35,6 +37,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
   const addTransaction = useFinanceStore((s) => s.addTransaction);
   const updateTransaction = useFinanceStore((s) => s.updateTransaction);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
+  const locationMode = useFinanceStore((s) => s.profile.locationMode);
   const { format: money, symbol, currency, todayIso } = useSettings();
 
   const [type, setType] = useState<TxType>("expense");
@@ -43,6 +46,10 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
   const [note, setNote] = useState("");
   const [date, setDate] = useState(defaultDate);
   const [payment, setPayment] = useState<PaymentMethod>("upi");
+  const [location, setLocation] = useState<TxLocation | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const autoTried = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -53,6 +60,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
       setNote(editing.note);
       setDate(editing.date);
       setPayment(editing.payment);
+      setLocation(editing.type === "expense" ? (editing.location ?? null) : null);
     } else {
       setType("expense");
       setAmount("");
@@ -60,8 +68,31 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
       setNote("");
       setDate(defaultDate || todayIso);
       setPayment("upi");
+      setLocation(null);
     }
+    setMapOpen(false);
+    autoTried.current = false;
   }, [open, editing, defaultDate, todayIso]);
+
+  useEffect(() => {
+    if (!open || editing || type !== "expense" || locationMode !== "auto" || autoTried.current) return;
+    autoTried.current = true;
+    let cancelled = false;
+    setLocating(true);
+    void readCurrentPosition()
+      .then(async (pos) => {
+        const label = await reversePlace(pos.lat, pos.lng).catch(() => "");
+        if (cancelled) return;
+        setLocation({ lat: pos.lat, lng: pos.lng, source: "gps", ...(label ? { label } : {}) });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLocating(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, editing, type, locationMode]);
 
   const parsed = parseAmountInput(amount);
 
@@ -76,7 +107,15 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
       toast.error("Enter an amount greater than zero.");
       return;
     }
-    const draft = { type, amount: value, categoryId, note: note.trim(), date, payment };
+    const draft = {
+      type,
+      amount: value,
+      categoryId,
+      note: note.trim(),
+      date,
+      payment,
+      location: type === "expense" ? (location ?? undefined) : undefined,
+    };
     if (editing) {
       updateTransaction(editing.id, draft);
       toast.success("Entry updated");
@@ -87,6 +126,17 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
     onOpenChange(false);
   }
 
+  function usePhone() {
+    setLocating(true);
+    void readCurrentPosition()
+      .then(async (pos) => {
+        const label = await reversePlace(pos.lat, pos.lng).catch(() => "");
+        setLocation({ lat: pos.lat, lng: pos.lng, source: "gps", ...(label ? { label } : {}) });
+      })
+      .catch(() => toast.error("This phone didn’t share a location. Search the map instead."))
+      .finally(() => setLocating(false));
+  }
+
   function remove() {
     if (!editing) return;
     deleteTransaction(editing.id);
@@ -95,6 +145,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
   }
 
   return (
+    <>
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
@@ -177,6 +228,37 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
             </div>
           </div>
 
+          {type === "expense" ? (
+            <div className="mb-5">
+              <Label>Place</Label>
+              <p className="mt-1.5 line-clamp-2 text-sm text-fg">
+                {locating ? "Finding this phone…" : location ? locationTitle(location) : "None"}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => {
+                    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+                    setMapOpen(true);
+                  }}
+                >
+                  Search map
+                </Button>
+                <Button type="button" variant="ghost" size="sm" className="rounded-full" onClick={usePhone} disabled={locating}>
+                  This phone
+                </Button>
+                {location ? (
+                  <Button type="button" variant="ghost" size="sm" className="rounded-full" onClick={() => setLocation(null)}>
+                    Clear
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           <Label>Paid with</Label>
           <div className="mt-1.5 mb-6 flex flex-wrap gap-2">
             {PAYMENTS.map((p) => (
@@ -219,5 +301,12 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
         </DrawerBody>
       </DrawerContent>
     </Drawer>
+    <LocationSheet
+      open={mapOpen}
+      initial={location}
+      onOpenChange={setMapOpen}
+      onConfirm={setLocation}
+    />
+    </>
   );
 }

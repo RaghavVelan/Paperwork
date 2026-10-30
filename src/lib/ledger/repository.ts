@@ -1,9 +1,9 @@
 import { coerceAutoPay, type AutoPay } from "@/lib/finance/autopay";
-import type { CustomCategory, Transaction } from "@/lib/finance/types";
+import type { CustomCategory, Transaction, TxLocation } from "@/lib/finance/types";
 import { isThemeMode } from "@/lib/theme";
 import { isCurrencyCode } from "./currencies";
 import { isBackupWeekday } from "./backup";
-import { DEFAULT_PROFILE, type LedgerSnapshot, type Profile } from "./types";
+import { DEFAULT_PROFILE, type LedgerSnapshot, type LocationMode, type Profile } from "./types";
 
 /**
  * Persistence boundary.
@@ -80,6 +80,7 @@ function coerceProfile(raw: unknown): Profile {
         : undefined,
     hideBalance: p.hideBalance !== false,
     categoryBudgets: coerceBudgets(p.categoryBudgets),
+    locationMode: isLocationMode(p.locationMode) ? p.locationMode : "off",
   };
 }
 
@@ -112,6 +113,34 @@ function coerceCategories(raw: unknown): CustomCategory[] {
   return out;
 }
 
+function isLocationMode(value: unknown): value is LocationMode {
+  return value === "off" || value === "ask" || value === "auto";
+}
+
+function coerceLocation(raw: unknown): TxLocation | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const location = raw as TxLocation;
+  if (typeof location.lat !== "number" || typeof location.lng !== "number") return undefined;
+  if (!Number.isFinite(location.lat) || !Number.isFinite(location.lng)) return undefined;
+  if (location.lat < -90 || location.lat > 90 || location.lng < -180 || location.lng > 180) return undefined;
+  const label = typeof location.label === "string" ? location.label.trim().slice(0, 80) : "";
+  return {
+    lat: Math.round(location.lat * 1e6) / 1e6,
+    lng: Math.round(location.lng * 1e6) / 1e6,
+    source: location.source === "gps" ? "gps" : "map",
+    ...(label ? { label } : {}),
+  };
+}
+
+function coerceTransaction(tx: Transaction): Transaction {
+  const location = tx.type === "expense" ? coerceLocation(tx.location) : undefined;
+  return {
+    ...tx,
+    autoPayId: typeof tx.autoPayId === "string" ? tx.autoPayId : undefined,
+    ...(location ? { location } : { location: undefined }),
+  };
+}
+
 function isTx(value: unknown): value is Transaction {
   if (!value || typeof value !== "object") return false;
   const t = value as Transaction;
@@ -131,10 +160,7 @@ function coerceSnapshot(root: Record<string, unknown>): LedgerSnapshot | null {
   return {
     version: 1,
     profile: coerceProfile(root.profile),
-    transactions: root.transactions.filter(isTx).map((t) => ({
-      ...t,
-      autoPayId: typeof t.autoPayId === "string" ? t.autoPayId : undefined,
-    })),
+    transactions: root.transactions.filter(isTx).map(coerceTransaction),
     autoPays,
     categories: coerceCategories(root.categories),
     updatedAt: typeof root.updatedAt === "string" ? root.updatedAt : new Date().toISOString(),
@@ -179,7 +205,7 @@ export class LocalLedgerRepository implements LedgerRepository {
     const body: LedgerSnapshot = {
       version: 1,
       profile: coerceProfile(snapshot.profile),
-      transactions: snapshot.transactions.filter(isTx),
+      transactions: snapshot.transactions.filter(isTx).map(coerceTransaction),
       autoPays: snapshot.autoPays ?? [],
       categories: coerceCategories(snapshot.categories),
       updatedAt: snapshot.updatedAt || new Date().toISOString(),

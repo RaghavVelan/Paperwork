@@ -40,7 +40,13 @@ export function SearchSheet({
         const label = categoryById(tx.categoryId, categories).label.toLowerCase();
         const note = tx.note.toLowerCase();
         const amount = String(tx.amount);
-        return note.includes(q) || label.includes(q) || (digits.length > 0 && amount.includes(digits));
+        const place = tx.location?.label?.toLowerCase() ?? "";
+        return (
+          note.includes(q) ||
+          label.includes(q) ||
+          place.includes(q) ||
+          (digits.length > 0 && amount.includes(digits))
+        );
       })
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   }, [categories, query, transactions]);

@@ -1,4 +1,5 @@
 import { categoryById, isInvestmentCategory, paymentLabel } from "@/lib/finance/categories";
+import { locationTitle } from "@/lib/finance/places";
 import { useFinanceStore } from "@/lib/finance/store";
 import type { Transaction } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
@@ -32,6 +33,7 @@ export function TransactionRow({
         <span className="block truncate text-xs text-muted">
           {cat.label}
           <span className="text-subtle"> · {paymentLabel(tx.payment)}</span>
+          {tx.location ? <span className="text-subtle"> · {locationTitle(tx.location)}</span> : null}
         </span>
       </span>
       <span

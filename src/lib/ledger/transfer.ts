@@ -36,7 +36,7 @@ export function transactionsToCsv(
   transactions: Transaction[],
   categories: CustomCategory[] = [],
 ): string {
-  const header = ["date", "type", "amount", "category", "note", "payment"];
+  const header = ["date", "type", "amount", "category", "note", "payment", "place", "latitude", "longitude"];
   const lines = [header.join(",")];
   const rows = [...transactions].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
   for (const tx of rows) {
@@ -48,6 +48,9 @@ export function transactionsToCsv(
         categoryById(tx.categoryId, categories).label,
         tx.note,
         tx.payment,
+        tx.location?.label ?? "",
+        tx.location ? String(tx.location.lat) : "",
+        tx.location ? String(tx.location.lng) : "",
       ]
         .map(csvCell)
         .join(","),
