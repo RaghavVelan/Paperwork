@@ -48,7 +48,7 @@ export function InsightsView({
   onShowYear: () => void;
   categoryBudgets: Record<string, number>;
 }) {
-  const { format: money } = useSettings();
+  const { format: money, todayIso, monthKey: currentMonth } = useSettings();
   const transactions = useFinanceStore((s) => s.transactions);
   const custom = useFinanceStore((s) => s.categories);
   const openEdit = useSheetStore((s) => s.openEdit);
@@ -59,9 +59,10 @@ export function InsightsView({
   const monthDate = parseISODate(`${month}-01`);
   const start = startOfMonth(monthDate);
   const dim = daysInMonth(start);
+  const lastDay = month === currentMonth ? Number(todayIso.slice(8, 10)) : dim;
 
   const daily = useMemo(() => {
-    return Array.from({ length: dim }, (_, i) => {
+    return Array.from({ length: lastDay }, (_, i) => {
       const iso = toISODate(new Date(start.getFullYear(), start.getMonth(), i + 1));
       const roll = summary.byDay.get(iso);
       const expense = roll?.expense ?? 0;
@@ -79,7 +80,7 @@ export function InsightsView({
         invest: invested,
       };
     });
-  }, [dim, start, summary.byDay, transactions]);
+  }, [lastDay, start, summary.byDay, transactions]);
 
   const cats = useMemo(() => {
     return [...summary.byCategory.entries()]
@@ -162,7 +163,12 @@ export function InsightsView({
           </section>
 
           <section className="rounded-3xl bg-surface p-4 shadow-card">
-            <h2 className="mb-3 text-sm font-medium text-fg">Daily spend</h2>
+            <h2 className="text-sm font-medium text-fg">Daily spend</h2>
+            <p className="mt-1 mb-3 text-xs text-muted">
+              {month === currentMonth
+                ? "Through today. A later day shows up once it has a spend."
+                : "Every day in this month."}
+            </p>
             {summary.expense === 0 ? (
               <p className="py-10 text-center text-sm text-muted">
                 Daily bars show up once you add an expense.
@@ -170,24 +176,26 @@ export function InsightsView({
             ) : (
               <div className="h-40 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={daily} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                  <BarChart data={daily} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <XAxis
                       dataKey="day"
                       tick={{ fill: "var(--color-subtle)", fontSize: 10 }}
                       axisLine={false}
                       tickLine={false}
-                      interval={4}
+                      interval={lastDay <= 10 ? 0 : 4}
+                      padding={{ left: 8, right: 8 }}
                     />
                     <YAxis hide />
                     <Tooltip
                       cursor={{ fill: "color-mix(in oklab, var(--color-fg) 4%, transparent)" }}
                       content={({ active, payload, label }) => {
-                        if (!active || !payload?.[0]) return null;
-                        const v = Number(payload[0].value ?? 0);
+                        if (!active || !payload?.length) return null;
+                        const spend = Number(payload.find((item) => item.dataKey === "spend")?.value ?? 0);
+                        const invest = Number(payload.find((item) => item.dataKey === "invest")?.value ?? 0);
                         return (
                           <div className="rounded-lg bg-raised px-2.5 py-1.5 text-xs shadow-float">
                             <span className="text-muted">Day {label}</span>
-                            <span className="ml-2 tabular-nums text-fg">{money(v)}</span>
+                            <span className="ml-2 tabular-nums text-fg">{money(spend + invest)}</span>
                           </div>
                         );
                       }}
@@ -195,6 +203,7 @@ export function InsightsView({
                     <Bar
                       dataKey="spend"
                       name="Spend"
+                      stackId="day"
                       fill="var(--color-expense)"
                       radius={[3, 3, 0, 0]}
                       isAnimationActive={false}
@@ -202,6 +211,7 @@ export function InsightsView({
                     <Bar
                       dataKey="invest"
                       name="Invested"
+                      stackId="day"
                       fill="var(--color-invest)"
                       radius={[3, 3, 0, 0]}
                       isAnimationActive={false}

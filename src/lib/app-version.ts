@@ -1,10 +1,18 @@
-export const APP_VERSION = "1.8.0";
+export const APP_VERSION = "1.8.1";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.8.1",
+    date: "4 Nov 2026",
+    items: [
+      "Back and swipe-down close a sheet in place. They no longer feel like changing pages.",
+      "Daily spend shows the days so far, instead of a thin strip at the start of the month.",
+    ],
+  },
   {
     version: "1.8.0",
     date: "30 Oct 2026",
