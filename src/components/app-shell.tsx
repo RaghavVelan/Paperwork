@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { AppLink } from "@/components/app-link";
 import { BackupBanner } from "@/components/backup-banner";
 import { BrandMark, BrandWordmark } from "@/components/brand-mark";
+import { GlassTabBar } from "@/components/glass-tab-bar";
 import { NAV_ITEMS } from "@/components/nav-items";
 import { Onboarding } from "@/components/onboarding";
 import { AvatarMark, ProfileAvatar } from "@/components/profile-avatar";
@@ -20,6 +21,9 @@ import { useSheetStore } from "@/lib/finance/sheet";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { transition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+
+/** Trial. Set false to restore the original bottom nav in this file. */
+const USE_GLASS_TAB_BAR = true;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const hydrated = useFinanceHydration();
@@ -169,15 +173,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             <BackupBanner />
             <motion.div
               key={pathname}
-              initial={{ opacity: 0, y: 8 }}
+              initial={USE_GLASS_TAB_BAR ? { opacity: 0 } : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={transition.page}
+              transition={USE_GLASS_TAB_BAR ? { duration: 0.16, ease: [0.22, 1, 0.36, 1] } : transition.page}
               className="mx-auto w-full max-w-xl"
             >
               {children}
             </motion.div>
           </main>
 
+          {USE_GLASS_TAB_BAR ? (
+            <GlassTabBar pathname={pathname} hidden={chromeHidden} />
+          ) : (
           <nav
             className={cn(
               "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/90 pb-safe backdrop-blur-md transition-opacity duration-200 lg:hidden",
@@ -206,6 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               })}
             </div>
           </nav>
+          )}
         </div>
 
         <TransactionSheet
