@@ -156,15 +156,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Search className="size-4" />
               </Button>
               <ThemeToggle />
-              <Button
-                type="button"
-                size="sm"
-                className="h-9 rounded-full pr-3 pl-2.5 lg:hidden"
-                onClick={() => openNew()}
-              >
-                <Plus className="size-4" />
-                Add
-              </Button>
+              {USE_GLASS_TAB_BAR ? null : (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 rounded-full pr-3 pl-2.5 lg:hidden"
+                  onClick={() => openNew()}
+                >
+                  <Plus className="size-4" />
+                  Add
+                </Button>
+              )}
               <ProfileAvatar size="sm" active={profileActive} />
             </div>
           </header>
@@ -173,9 +175,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <BackupBanner />
             <motion.div
               key={pathname}
-              initial={USE_GLASS_TAB_BAR ? { opacity: 0 } : { opacity: 0, y: 8 }}
+              initial={USE_GLASS_TAB_BAR ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={USE_GLASS_TAB_BAR ? { duration: 0.16, ease: [0.22, 1, 0.36, 1] } : transition.page}
+              transition={transition.page}
               className="mx-auto w-full max-w-xl"
             >
               {children}

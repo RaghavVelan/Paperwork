@@ -1,10 +1,17 @@
-export const APP_VERSION = "1.8.2";
+export const APP_VERSION = "1.8.3";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.8.3",
+    date: "7 Nov 2026",
+    items: [
+      "Add sits beside the glass bar. Changing tabs no longer fades the page under it.",
+    ],
+  },
   {
     version: "1.8.2",
     date: "5 Nov 2026",

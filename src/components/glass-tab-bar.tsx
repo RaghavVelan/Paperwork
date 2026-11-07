@@ -1,7 +1,9 @@
-import { useEffect, useState, type ComponentProps, type ElementType, type ReactNode } from "react";
+import type { ComponentProps, CSSProperties, ElementType, ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { TabBar } from "glisse";
 import { NAV_ITEMS } from "@/components/nav-items";
+import { useSheetStore } from "@/lib/finance/sheet";
 import { cn } from "@/lib/utils";
 
 /** Three passes, stronger toward the bottom. */
@@ -39,33 +41,16 @@ function TabLink({
 }
 
 export function GlassTabBar({ pathname, hidden }: { pathname: string; hidden: boolean }) {
+  const openNew = useSheetStore((s) => s.openNew);
   const value = NAV_ITEMS.find((item) => item.match(pathname))?.href ?? null;
-  const [settling, setSettling] = useState(false);
-
-  useEffect(() => {
-    setSettling(true);
-    const timer = window.setTimeout(() => setSettling(false), 180);
-    return () => window.clearTimeout(timer);
-  }, [pathname]);
 
   return (
     <div
       className={cn(
         "pointer-events-none fixed inset-x-0 bottom-0 z-40 transition-opacity duration-200 lg:hidden",
         hidden && "opacity-0",
-        settling && "pw-tab-settling",
       )}
     >
-      <style>{`
-        .pw-tab-settling .lg-glass {
-          -webkit-backdrop-filter: blur(12px) saturate(1.4);
-          backdrop-filter: blur(12px) saturate(1.4);
-        }
-        .pw-tab-settling .pw-blur-layer {
-          -webkit-backdrop-filter: none;
-          backdrop-filter: none;
-        }
-      `}</style>
       <div className="absolute inset-x-0 bottom-0 h-28" aria-hidden>
         {BLUR_LAYERS.map((layer) => (
           <div
@@ -82,7 +67,7 @@ export function GlassTabBar({ pathname, hidden }: { pathname: string; hidden: bo
       </div>
       <div
         className={cn(
-          "relative flex justify-center px-3 pt-3 pb-[max(0.7rem,env(safe-area-inset-bottom))]",
+          "relative mx-auto flex w-full max-w-xl items-center justify-center gap-2.5 px-4 pt-3 pb-[max(0.7rem,env(safe-area-inset-bottom))]",
           hidden ? "pointer-events-none" : "pointer-events-auto",
         )}
       >
@@ -90,6 +75,7 @@ export function GlassTabBar({ pathname, hidden }: { pathname: string; hidden: bo
           aria-label="Main"
           link={TabLink as ElementType}
           value={value}
+          style={{ "--lg-tab-width": "62px" } as CSSProperties}
           items={NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return {
@@ -100,6 +86,14 @@ export function GlassTabBar({ pathname, hidden }: { pathname: string; hidden: bo
             };
           })}
         />
+        <button
+          type="button"
+          aria-label="Add expense"
+          onClick={() => openNew()}
+          className="grid size-[60px] shrink-0 place-items-center rounded-full bg-fg text-bg shadow-float"
+        >
+          <Plus className="size-7" strokeWidth={2.25} />
+        </button>
       </div>
     </div>
   );
