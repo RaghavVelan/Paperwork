@@ -20,6 +20,7 @@ import {
 } from "@/lib/finance/categories";
 import { locationTitle, readCurrentPosition, reversePlace } from "@/lib/finance/places";
 import { useFinanceStore } from "@/lib/finance/store";
+import { useSheetStore } from "@/lib/finance/sheet";
 import type { CategoryId, PaymentMethod, Transaction, TxLocation, TxType } from "@/lib/finance/types";
 import { useSettings } from "@/lib/ledger/use-settings";
 import { tapScale, transition } from "@/lib/motion";
@@ -38,6 +39,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
   const updateTransaction = useFinanceStore((s) => s.updateTransaction);
   const deleteTransaction = useFinanceStore((s) => s.deleteTransaction);
   const locationMode = useFinanceStore((s) => s.profile.locationMode);
+  const draftType = useSheetStore((s) => s.draftType);
   const { format: money, symbol, currency, todayIso } = useSettings();
 
   const [type, setType] = useState<TxType>("expense");
@@ -62,9 +64,9 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
       setPayment(editing.payment);
       setLocation(editing.type === "expense" ? (editing.location ?? null) : null);
     } else {
-      setType("expense");
+      setType(draftType);
       setAmount("");
-      setCategoryId(defaultCategory("expense"));
+      setCategoryId(defaultCategory(draftType));
       setNote("");
       setDate(defaultDate || todayIso);
       setPayment("upi");
@@ -72,7 +74,7 @@ export function TransactionSheet({ open, onOpenChange, editing, defaultDate }: P
     }
     setMapOpen(false);
     autoTried.current = false;
-  }, [open, editing, defaultDate, todayIso]);
+  }, [open, editing, defaultDate, todayIso, draftType]);
 
   useEffect(() => {
     if (!open || editing || type !== "expense" || locationMode !== "auto" || autoTried.current) return;

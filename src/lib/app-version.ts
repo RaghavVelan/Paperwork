@@ -1,10 +1,19 @@
-export const APP_VERSION = "1.8.3";
+export const APP_VERSION = "1.8.4";
 
 export const CHANGELOG: {
   version: string;
   date: string;
   items: string[];
 }[] = [
+  {
+    version: "1.8.4",
+    date: "13 Nov 2026",
+    items: [
+      "Hiding the balance turns the amounts into dots.",
+      "Expense, income, auto pay, and search sit under the balance.",
+      "Calendar and this week use taller day cells. Yearly stays on the calendar page.",
+    ],
+  },
   {
     version: "1.8.3",
     date: "7 Nov 2026",

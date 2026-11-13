@@ -16,6 +16,7 @@ export function YearView({
   onShowMonth,
   onOpenMonth,
   currentMonth,
+  embedded = false,
 }: {
   eyebrow: string;
   year: string;
@@ -26,12 +27,47 @@ export function YearView({
   onShowMonth: () => void;
   onOpenMonth: (month: string) => void;
   currentMonth: string;
+  /** Month list only, for a page that already has its own header. */
+  embedded?: boolean;
 }) {
   const { format: money } = useSettings();
   const rows = yearRollup(transactions, year);
   const income = rows.reduce((n, row) => n + row.income, 0);
   const expense = rows.reduce((n, row) => n + row.expense, 0);
   const max = Math.max(...rows.map((row) => Math.max(row.income, row.expense)), 1);
+
+  const list = (
+    <ul className="flex flex-col gap-2">
+      {rows.map((row) => {
+        const future = row.month > currentMonth;
+        return (
+          <li key={row.month}>
+            <button
+              type="button"
+              disabled={future}
+              onClick={() => onOpenMonth(row.month)}
+              className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left shadow-card disabled:opacity-40"
+            >
+              <span className="w-16 shrink-0 text-sm text-fg">{monthTitle(row.month).split(" ")[0]}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex h-1.5 overflow-hidden rounded-full bg-raised">
+                  <span
+                    className="h-full bg-expense/80"
+                    style={{ width: `${(row.expense / max) * 100}%` }}
+                  />
+                </span>
+                <span className={cn("mt-1 block text-xs tabular-nums text-muted", row.count === 0 && "text-subtle")}>
+                  {row.count === 0 ? "No entries" : `${money(row.expense)} out · ${money(row.income)} in`}
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  if (embedded) return list;
 
   return (
     <div className="flex flex-col gap-6 px-5 pt-2 pb-8">
@@ -62,34 +98,7 @@ export function YearView({
         </div>
       </header>
 
-      <ul className="flex flex-col gap-2">
-        {rows.map((row) => {
-          const future = row.month > currentMonth;
-          return (
-            <li key={row.month}>
-              <button
-                type="button"
-                disabled={future}
-                onClick={() => onOpenMonth(row.month)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left shadow-card disabled:opacity-40"
-              >
-                <span className="w-16 shrink-0 text-sm text-fg">{monthTitle(row.month).split(" ")[0]}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex h-1.5 overflow-hidden rounded-full bg-raised">
-                    <span
-                      className="h-full bg-expense/80"
-                      style={{ width: `${(row.expense / max) * 100}%` }}
-                    />
-                  </span>
-                  <span className={cn("mt-1 block text-xs tabular-nums text-muted", row.count === 0 && "text-subtle")}>
-                    {row.count === 0 ? "No entries" : `${money(row.expense)} out · ${money(row.income)} in`}
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {list}
     </div>
   );
 }

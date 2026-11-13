@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
@@ -40,7 +40,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const transactions = useFinanceStore((s) => s.transactions);
   const displayName = useFinanceStore((s) => s.profile.displayName);
   const { todayIso } = useSettings();
-  const [searchOpen, setSearchOpen] = useState(false);
+  const searchOpen = useSheetStore((s) => s.searchOpen);
+  const setSearchOpen = useSheetStore((s) => s.setSearchOpen);
   const toastTheme = useResolvedTheme();
   const editing = editingId
     ? (transactions.find((t) => t.id === editingId) ?? null)
