@@ -272,7 +272,7 @@ export function CalendarView({
                     <h2 className="text-sm font-medium text-fg">{selectedLabel}</h2>
                     <p className="text-xs text-muted">
                       {selectedRoll
-                        ? `${selectedTx.length} ${selectedTx.length === 1 ? "entry" : "entries"}`
+                        ? `${selectedTx.length} ${selectedTx.length === 1 ? "entry" : "entries"} · ${money(selectedRoll.expense)} spent`
                         : "Nothing yet"}
                     </p>
                   </div>
